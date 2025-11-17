@@ -13,16 +13,16 @@ SnipFlow solves this by letting you capture code with one click, automatically o
 
 # 🚀Core Features
 
-One-Click Capture: Right-click any code on the web → Save to SnipFlow instantly
-Smart Detection: Automatically detects programming language from context
-Offline-First: All data stored locally using IndexedDB - works without internet
-Full-Text Search: Search across titles, code content, tags, and descriptions
-Syntax Highlighting: Beautiful code display with Prism.js support for 50+ languages
-Tag Organization: Create custom tags to categorize your snippets
-Export/Import: Backup all snippets as JSON or migrate between devices
-Analytics Dashboard: Track most-used snippets and capture sources
-Dark/Light Theme: Eye-friendly themes with automatic system detection
-Privacy-Focused: Zero tracking, no external servers, your data stays local
+1. One-Click Capture: Right-click any code on the web → Save to SnipFlow instantly
+2. Smart Detection: Automatically detects programming language from context
+3. Offline-First: All data stored locally using IndexedDB - works without internet
+4. Full-Text Search: Search across titles, code content, tags, and descriptions
+5. Syntax Highlighting: Beautiful code display with Prism.js support for 50+ languages
+6. Tag Organization: Create custom tags to categorize your snippets
+7. Export/Import: Backup all snippets as JSON or migrate between devices
+8. Analytics Dashboard: Track most-used snippets and capture sources
+9. Dark/Light Theme: Eye-friendly themes with automatic system detection
+10. Privacy-Focused: Zero tracking, no external servers, your data stays local
 
 # 🎨Advanced Features
 # Context Preservation - Saves source URL and page title with each snippet
