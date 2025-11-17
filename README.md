@@ -25,21 +25,21 @@ SnipFlow solves this by letting you capture code with one click, automatically o
 10. Privacy-Focused: Zero tracking, no external servers, your data stays local
 
 # 🎨Advanced Features
-# Context Preservation - Saves source URL and page title with each snippet
-# Keyboard Shortcuts - Ctrl+Shift+S to quick-save selected text
-# Recent View - Quick access to recently saved snippets
-# Duplicate Detection - Prevents saving the same snippet twice
-# Copy to Clipboard - One-click copy from dashboard or extension popup
-# Multi-Language Support - JavaScript, Python, Java, C++, HTML, CSS, SQL, and more
-# Responsive Design - Works seamlessly on desktop, tablet, and mobile
+1. Context Preservation - Saves source URL and page title with each snippet
+2. Keyboard Shortcuts - Ctrl+Shift+S to quick-save selected text
+3. Recent View - Quick access to recently saved snippets
+4. Duplicate Detection - Prevents saving the same snippet twice
+5. Copy to Clipboard - One-click copy from dashboard or extension popup
+6. Multi-Language Support - JavaScript, Python, Java, C++, HTML, CSS, SQL, and more
+7. Responsive Design - Works seamlessly on desktop, tablet, and mobile
 
 # Demo
 # Tech Stack
 # Frontend
 
-- JavaScript (ES6+) - Modern vanilla JavaScript, no frameworks
-- HTML5 & CSS3 - Semantic markup and modern styling
-- CSS Grid & Flexbox - Responsive layouts
+- JavaScript (ES6+):  Modern vanilla JavaScript, no frameworks
+- HTML5 & CSS3: Semantic markup and modern styling
+- CSS Grid & Flexbox: Responsive layouts
 
 # Storage & Data
 - IndexedDB: Browser's native database for offline-first storage
@@ -68,3 +68,6 @@ Capturing Code Snippets
 3. Instant save!
 
 # Method 3: Extension Popup
+1. Click the SnipFlow icon in your toolbar
+2. View recent snippets
+3. Click any snippet to copy to clipboard
