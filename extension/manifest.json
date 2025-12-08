@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "SnipFlow - Code Snippet Manager",
+  "version": "1.0.0",
+  "description": "Capture code snippets from any website with one click",
+  "permissions": [
+    "storage",
+    "contextMenus",
+    "notifications",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "commands": {
+    "save-snippet": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "Save selected code to SnipFlow"
+    }
+  }
+}
