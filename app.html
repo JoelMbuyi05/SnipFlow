@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Dashboard - Snipflow</title>
+</head>
+<body class="bg-slate-50 h-screen overflow-hidden">
+
+  <!-- Top Navbar -->
+  <nav class="bg-white border-b border-slate-200 px-6 py-4">
+    <div class="flex items-center justify-between">
+      <!-- Logo -->
+      <a href="index.html" class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center text-white">
+          <i class="fas fa-code text-xl"></i>
+        </div>
+        <span class="text-2xl font-bold text-blue-900">Snipflow</span>
+      </a>
+
+      <!-- Search Bar -->
+      <div class="flex-1 max-w-xl mx-8">
+        <div class="relative">
+          <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input 
+            type="text" 
+            placeholder="Search snippets by title, code, or tags..." 
+            class="w-full pl-12 pr-4 py-3 bg-slate-100 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+          >
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center gap-3">
+        <button class="bg-gradient-to-r from-blue-500 to-blue-700 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-blue-500/30 transition flex items-center gap-2">
+          <i class="fas fa-plus"></i>
+          Add Snippet
+        </button>
+        <button class="w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-lg flex items-center justify-center transition">
+          <i class="fas fa-user text-slate-600"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Layout -->
+  <div class="flex h-[calc(100vh-73px)]">
+    
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-slate-200 p-6 overflow-y-auto">
+      
+      <!-- Quick Stats -->
+      <div class="mb-6 p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+        <div class="text-sm text-slate-600 mb-1">Total Snippets</div>
+        <div class="text-3xl font-bold text-blue-900">0</div>
+      </div>
+
+      <!-- Filters -->
+      <div class="mb-6">
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Quick Filters</h3>
+        <div class="space-y-1">
+          <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-50 text-blue-700 font-medium">
+            <i class="fas fa-th-large w-4"></i>
+            <span>All Snippets</span>
+            <span class="ml-auto text-xs bg-blue-200 text-blue-700 px-2 py-0.5 rounded-full">0</span>
+          </a>
+          <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 font-medium transition">
+            <i class="fas fa-star w-4 text-yellow-500"></i>
+            <span>Favorites</span>
+          </a>
+          <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 font-medium transition">
+            <i class="fas fa-clock w-4 text-slate-400"></i>
+            <span>Recent</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Languages -->
+      <div class="mb-6">
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Languages</h3>
+        <div class="space-y-1" id="languages-list">
+          <p class="text-sm text-slate-400 italic px-3 py-2">No languages yet</p>
+        </div>
+      </div>
+
+      <!-- Tags -->
+      <div>
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Tags</h3>
+        <div class="flex flex-wrap gap-2" id="tags-list">
+          <p class="text-sm text-slate-400 italic">No tags yet</p>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-8">
+      
+      <!-- Header -->
+      <div class="mb-6">
+        <h1 class="text-3xl font-bold text-slate-900 mb-2">All Snippets</h1>
+        <p class="text-slate-600">Manage and organize your code snippets</p>
+      </div>
+
+      <!-- Empty State -->
+      <div class="flex flex-col items-center justify-center py-20">
+        <div class="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center mb-6">
+          <i class="fas fa-code text-4xl text-blue-500"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-900 mb-3">No snippets yet</h2>
+        <p class="text-slate-600 mb-6 text-center max-w-md">
+          Start building your code library by adding your first snippet. You can save code from any website using our browser extension.
+        </p>
+        <button class="bg-gradient-to-r from-blue-500 to-blue-700 text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-blue-500/30 transition flex items-center gap-2">
+          <i class="fas fa-plus"></i>
+          Add Your First Snippet
+        </button>
+      </div>
+
+      <!-- Snippet Grid (Hidden when empty) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
+        
+        <!-- Snippet Card Example -->
+        <div class="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-lg hover:border-blue-300 transition cursor-pointer group">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex-1">
+              <h3 class="font-bold text-slate-900 mb-1 group-hover:text-blue-600 transition">Array Map Example</h3>
+              <div class="flex items-center gap-2 text-xs text-slate-500">
+                <span class="flex items-center gap-1">
+                  <span class="w-2 h-2 bg-yellow-400 rounded-full"></span>
+                  JavaScript
+                </span>
+                <span>•</span>
+                <span>2 days ago</span>
+              </div>
+            </div>
+            <button class="opacity-0 group-hover:opacity-100 transition">
+              <i class="fas fa-star text-slate-300 hover:text-yellow-500"></i>
+            </button>
+          </div>
+          
+          <div class="bg-slate-900 rounded-lg p-3 mb-3 font-mono text-xs text-slate-300 overflow-hidden">
+            <code>const numbers = [1, 2, 3];<br>const doubled = numbers.map(n => n * 2);</code>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex gap-1">
+              <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-medium">array</span>
+              <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-medium">map</span>
+            </div>
+            <button class="text-slate-400 hover:text-blue-600 transition">
+              <i class="fas fa-copy"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <script>
+    // Smooth interactions
+    console.log('Snoflow Dashboard Loaded');
+  </script>
+
+</body>
+</html>
