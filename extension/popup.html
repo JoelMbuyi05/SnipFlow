@@ -1,269 +1,229 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SnipFlow</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snipflow</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        body {
-            width: 380px;
-            min-height: 400px;
-            max-height: 600px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0f0f0f;
-            color: #e4e4e7;
-            overflow: hidden;
-        }
+    body {
+      width: 400px;
+      min-height: 500px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #e0f2fe 0%, #f8fafc 100%);
+    }
 
-        .header {
-            background: #18181b;
-            border-bottom: 1px solid #27272a;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
+    .header {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #3b82f6;
-        }
+    .header h1 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
 
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            padding: 12px;
-            background: #18181b;
-            border-bottom: 1px solid #27272a;
-        }
+    .header p {
+      font-size: 12px;
+      opacity: 0.9;
+    }
 
-        .stat {
-            text-align: center;
-        }
+    .container {
+      padding: 20px;
+    }
 
-        .stat-value {
-            font-size: 20px;
-            font-weight: 700;
-            color: #3b82f6;
-        }
+    .form-group {
+      margin-bottom: 15px;
+    }
 
-        .stat-label {
-            font-size: 11px;
-            color: #71717a;
-            margin-top: 2px;
-        }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 6px;
+    }
 
-        .recent-snippets {
-            padding: 12px;
-            max-height: 400px;
-            overflow-y: auto;
-        }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+    }
 
-        .recent-title {
-            font-size: 12px;
-            font-weight: 600;
-            color: #a1a1aa;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+    textarea {
+      resize: vertical;
+      min-height: 150px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+    }
 
-        .snippet-item {
-            background: #18181b;
-            border: 1px solid #27272a;
-            border-radius: 6px;
-            padding: 10px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
 
-        .snippet-item:hover {
-            border-color: #3b82f6;
-            background: #1c1c1f;
-        }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
 
-        .snippet-item-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: #e4e4e7;
-            margin-bottom: 4px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: white;
+    }
 
-        .snippet-item-meta {
-            display: flex;
-            gap: 8px;
-            font-size: 11px;
-            color: #71717a;
-        }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
 
-        .language-badge {
-            background: #3b82f6;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: 600;
-        }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
 
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #71717a;
-        }
+    .btn-secondary {
+      background: white;
+      color: #3b82f6;
+      border: 2px solid #3b82f6;
+      margin-top: 10px;
+    }
 
-        .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-            opacity: 0.3;
-        }
+    .btn-secondary:hover {
+      background: #3b82f6;
+      color: white;
+    }
 
-        .empty-state h3 {
-            font-size: 14px;
-            margin-bottom: 8px;
-            color: #a1a1aa;
-        }
+    .status {
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      font-size: 13px;
+      text-align: center;
+    }
 
-        .empty-state p {
-            font-size: 12px;
-            line-height: 1.5;
-        }
+    .status.success {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
 
-        .actions {
-            padding: 12px;
-            border-top: 1px solid #27272a;
-            display: flex;
-            gap: 8px;
-        }
+    .status.error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
 
-        .btn {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
+    .status.info {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+    }
 
-        .btn-primary {
-            background: #3b82f6;
-            color: white;
-        }
+    .hidden {
+      display: none;
+    }
 
-        .btn-primary:hover {
-            background: #2563eb;
-        }
+    .footer {
+      text-align: center;
+      padding: 15px;
+      font-size: 11px;
+      color: #64748b;
+      border-top: 1px solid #e2e8f0;
+    }
 
-        .btn-secondary {
-            background: #27272a;
-            color: #e4e4e7;
-        }
-
-        .btn-secondary:hover {
-            background: #3f3f46;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #71717a;
-        }
-
-        .spinner {
-            border: 3px solid #27272a;
-            border-top: 3px solid #3b82f6;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 12px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #18181b;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #3f3f46;
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #52525b;
-        }
-    </style>
+    .footer a {
+      color: #3b82f6;
+      text-decoration: none;
+    }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <div class="logo">
-            <i class="fas fa-code"></i>
-            <span>SnipFlow</span>
-        </div>
-    </div>
 
-    <div class="stats">
-        <div class="stat">
-            <div class="stat-value" id="total-snippets">0</div>
-            <div class="stat-label">Snippets</div>
-        </div>
-        <div class="stat">
-            <div class="stat-value" id="total-languages">0</div>
-            <div class="stat-label">Languages</div>
-        </div>
-        <div class="stat">
-            <div class="stat-value" id="total-tags">0</div>
-            <div class="stat-label">Tags</div>
-        </div>
-    </div>
+  <!-- Header -->
+  <div class="header">
+    <h1><i class="fas fa-code"></i> Snipflow</h1>
+    <p>Save code snippets from anywhere</p>
+  </div>
 
-    <div class="recent-snippets">
-        <div class="recent-title">Recent Captures</div>
-        <div id="snippets-list">
-            <div class="loading">
-                <div class="spinner"></div>
-                <p>Loading snippets...</p>
-            </div>
-        </div>
-    </div>
+  <!-- Status Message -->
+  <div id="statusMessage" class="status hidden"></div>
 
-    <div class="actions">
-        <button class="btn btn-primary" id="open-dashboard-btn">
-            📊 Dashboard
-        </button>
-        <button class="btn btn-secondary" id="export-btn">
-            ⬇️ Export
-        </button>
-    </div>
+  <!-- Main Container -->
+  <div class="container">
+    <form id="snippetForm">
+      
+      <div class="form-group">
+        <label>Title *</label>
+        <input type="text" id="title" placeholder="e.g., React useState Hook" required>
+      </div>
 
-    <script src="popup.js"></script>
+      <div class="form-group">
+        <label>Language *</label>
+        <select id="language" required>
+          <option value="">Select language...</option>
+          <option value="JavaScript">JavaScript</option>
+          <option value="Python">Python</option>
+          <option value="Java">Java</option>
+          <option value="TypeScript">TypeScript</option>
+          <option value="HTML">HTML</option>
+          <option value="CSS">CSS</option>
+          <option value="PHP">PHP</option>
+          <option value="Ruby">Ruby</option>
+          <option value="Go">Go</option>
+          <option value="Rust">Rust</option>
+          <option value="C++">C++</option>
+          <option value="C#">C#</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Code *</label>
+        <textarea id="code" placeholder="Paste your code here..." required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Tags (comma separated)</label>
+        <input type="text" id="tags" placeholder="e.g., react, hooks, state">
+      </div>
+
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save"></i> Save to Snipflow
+      </button>
+
+      <button type="button" id="captureBtn" class="btn btn-secondary">
+        <i class="fas fa-crosshairs"></i> Capture Code from Page
+      </button>
+
+    </form>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <a href="../app.html" target="_blank">Open Dashboard</a>
+    <a href="https://snipflow.dev" target="_blank">About</a>
+  </div>
+
+  <script src="popup.js"></script>
+
 </body>
 </html>
