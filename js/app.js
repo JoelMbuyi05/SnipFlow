@@ -10,7 +10,7 @@ let currentSearch = '';
 // INITIALIZE APP
 // ============================================
 async function initApp() {
-  console.log('Initializing Snipflow...');
+  console.log('🚀 Initializing Snipflow...');
   
   try {
     // Initialize database
@@ -25,11 +25,36 @@ async function initApp() {
     // Update stats
     await updateStats();
     
-    console.log('Snipflow initialized successfully!');
+    // AUTO-REFRESH: Listen for storage changes (new snippets from extension)
+    setupAutoRefresh();
+    
+    console.log('✅ Snipflow initialized successfully!');
   } catch (error) {
-    console.error('Failed to initialize app:', error);
+    console.error('❌ Failed to initialize app:', error);
     alert('Failed to initialize app. Please refresh the page.');
   }
+}
+
+// ============================================
+// AUTO-REFRESH DASHBOARD
+// ============================================
+function setupAutoRefresh() {
+  // Create a MutationObserver for IndexedDB changes
+  // Since IndexedDB doesn't have native change listeners, we'll poll periodically
+  let lastCount = allSnippets.length;
+  
+  setInterval(async () => {
+    const currentSnippets = await getAllSnippets();
+    
+    if (currentSnippets.length !== lastCount) {
+      console.log('🔄 New snippets detected! Refreshing...');
+      lastCount = currentSnippets.length;
+      await loadSnippets();
+      await updateStats();
+    }
+  }, 2000); // Check every 2 seconds
+  
+  console.log('👀 Auto-refresh enabled');
 }
 
 // ============================================
@@ -38,14 +63,14 @@ async function initApp() {
 async function loadSnippets() {
   try {
     allSnippets = await getAllSnippets();
-    console.log(`Loaded ${allSnippets.length} snippets`);
+    console.log(`📦 Loaded ${allSnippets.length} snippets`);
     
     // Sort by most recent first
     allSnippets.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     
     renderSnippets(allSnippets);
   } catch (error) {
-    console.error('Failed to load snippets:', error);
+    console.error('❌ Failed to load snippets:', error);
   }
 }
 
@@ -216,7 +241,7 @@ async function copyCode(id) {
   const snippet = await getSnippet(id);
   if (snippet) {
     await navigator.clipboard.writeText(snippet.code);
-    alert('Code copied!');
+    alert('✅ Code copied!');
   }
 }
 
@@ -238,10 +263,10 @@ async function deleteSnippetConfirm(id) {
       closeViewModal(); // Close the modal first
       await loadSnippets(); // Reload all snippets
       await updateStats(); // Update counters
-      alert('Snippet deleted successfully!');
+      alert('🗑️ Snippet deleted successfully!');
     } catch (error) {
       console.error('Failed to delete snippet:', error);
-      alert('Failed to delete snippet');
+      alert('❌ Failed to delete snippet');
     }
   }
 }
@@ -359,13 +384,13 @@ async function saveNewSnippet(e) {
   
   try {
     await addSnippet({ title, code, language, tags });
-    alert('Snippet saved successfully!');
+    alert('✅ Snippet saved successfully!');
     closeAddModal();
     await loadSnippets();
     await updateStats();
   } catch (error) {
     console.error('Failed to save snippet:', error);
-    alert('Failed to save snippet');
+    alert('❌ Failed to save snippet');
   }
 }
 

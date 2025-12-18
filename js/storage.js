@@ -1,5 +1,5 @@
 // ============================================
-// SNIPFLOW - STORAGE LAYER (IndexedDB)
+// SNOFLOW - STORAGE LAYER (IndexedDB)
 // ============================================
 // Handles all database operations for snippets
 
