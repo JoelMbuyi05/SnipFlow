@@ -1,6 +1,9 @@
 // ============================================
-// SNIPFLOW - POPUP SCRIPT
+// SNIPFLOW - POPUP SCRIPT (ENHANCED)
 // ============================================
+// Better language detection, duplicate warnings, quick stats
+
+console.log('📄 Popup script loading...');
 
 const form = document.getElementById('snippetForm');
 const titleInput = document.getElementById('title');
@@ -9,60 +12,115 @@ const codeTextarea = document.getElementById('code');
 const tagsInput = document.getElementById('tags');
 const statusMessage = document.getElementById('statusMessage');
 
-// ============================================
-// INITIALIZE ON LOAD
-// ============================================
+console.log('✅ DOM elements loaded');
+
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('🚀 Popup opened');
+  console.log('🚀 Popup DOMContentLoaded fired');
+  
   loadCapturedCode();
-  
-  // Setup open dashboard link (if exists)
-  const openDashboardBtn = document.getElementById('openDashboard');
-  if (openDashboardBtn) {
-    openDashboardBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      chrome.tabs.create({ url: chrome.runtime.getURL('app.html') });
-    });
-  }
-  
-  // Listen for storage changes (real-time updates)
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && changes.lastCapturedCode) {
-      console.log('📦 Storage changed, filling form');
-      fillForm(changes.lastCapturedCode.newValue);
-    }
-  });
+  setupQuickActions();
 });
 
 // ============================================
-// LOAD FROM STORAGE
+// LOAD CAPTURED CODE
 // ============================================
 function loadCapturedCode() {
+  console.log('🔍 Loading captured code from storage...');
+  
   chrome.storage.local.get(['lastCapturedCode'], (result) => {
-    if (result.lastCapturedCode) {
-      console.log('✅ Found captured code:', result.lastCapturedCode);
+    if (chrome.runtime.lastError) {
+      console.error('❌ Storage error:', chrome.runtime.lastError);
+      showStatus('⚠️ Storage error. Please refresh the extension.', 'error');
+      return;
+    }
+    
+    if (result && result.lastCapturedCode) {
+      console.log('✅ Found captured code');
       fillForm(result.lastCapturedCode);
     } else {
       console.log('❌ No captured code');
-      showStatus('💡 Right-click on code to capture', 'info');
+      showStatus('💡 Right-click on code or paste manually', 'info');
     }
   });
 }
 
 // ============================================
-// FILL FORM
+// FILL FORM WITH CAPTURED DATA
 // ============================================
 function fillForm(data) {
   if (!data) return;
   
-  titleInput.value = data.title || '';
-  languageSelect.value = data.language || 'JavaScript';
-  codeTextarea.value = data.code || '';
+  console.log('📝 Filling form with data');
   
-  showStatus('✨ Code auto-filled!', 'success');
-  
-  // Clear storage after loading
-  chrome.storage.local.remove(['lastCapturedCode']);
+  try {
+    if (data.title) {
+      titleInput.value = data.title;
+      console.log('✅ Title filled');
+    }
+    
+    if (data.language) {
+      const langValue = data.language;
+      const options = Array.from(languageSelect.options).map(o => o.value);
+      
+      if (options.includes(langValue)) {
+        languageSelect.value = langValue;
+      } else {
+        const matchedLang = options.find(o => 
+          o.toLowerCase() === langValue.toLowerCase() ||
+          o.includes(langValue)
+        );
+        if (matchedLang) {
+          languageSelect.value = matchedLang;
+        }
+      }
+    }
+    
+    if (data.code) {
+      codeTextarea.value = data.code;
+      codeTextarea.focus();
+    }
+    
+    if (data.tags) {
+      tagsInput.value = Array.isArray(data.tags) ? data.tags.join(', ') : data.tags;
+    }
+    
+    showStatus('✨ Code auto-filled!', 'success');
+    
+    // Check for duplicates
+    checkDuplicateCode(data.code);
+  } catch (error) {
+    console.error('❌ Error filling form:', error);
+    showStatus('⚠️ Error filling form', 'error');
+  }
+}
+
+// ============================================
+// CHECK FOR DUPLICATES
+// ============================================
+function checkDuplicateCode(code) {
+  chrome.runtime.sendMessage(
+    { action: 'checkDuplicate', code },
+    (response) => {
+      if (response && response.isDuplicate && response.existing) {
+        showStatus(`⚠️ Similar snippet exists: "${response.existing.title}"`, 'warning');
+      }
+    }
+  );
+}
+
+// ============================================
+// SETUP QUICK ACTIONS
+// ============================================
+function setupQuickActions() {
+  const openDashboardBtn = document.getElementById('openDashboard');
+  if (openDashboardBtn) {
+    openDashboardBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const appUrl = chrome.runtime.getURL('extension/app.html');
+      chrome.tabs.create({ url: appUrl });
+      window.close();
+    });
+  }
 }
 
 // ============================================
@@ -70,6 +128,7 @@ function fillForm(data) {
 // ============================================
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
+  console.log('📤 Form submitted');
   
   const title = titleInput.value.trim();
   const language = languageSelect.value;
@@ -77,7 +136,7 @@ form.addEventListener('submit', async (e) => {
   const tagsString = tagsInput.value.trim();
   
   if (!title || !language || !code) {
-    showStatus('❌ Please fill all required fields', 'error');
+    showStatus('❌ Fill all required fields', 'error');
     return;
   }
   
@@ -94,30 +153,54 @@ form.addEventListener('submit', async (e) => {
     isFavorite: false
   };
   
-  console.log('💾 Saving snippet:', snippet);
+  console.log('💾 Saving snippet...');
+  showStatus('⏳ Saving...', 'info');
   
   try {
-    // Save via background script
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalHTML = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    submitBtn.disabled = true;
+    
     chrome.runtime.sendMessage(
-      { action: 'saveSnippet', snippet: snippet },
+      { action: 'saveSnippet', snippet },
       (response) => {
-        console.log('📨 Save response:', response);
+        if (chrome.runtime.lastError) {
+          console.error('❌ Runtime error:', chrome.runtime.lastError);
+          showStatus('❌ Error: Background worker not responding', 'error');
+          submitBtn.innerHTML = originalHTML;
+          submitBtn.disabled = false;
+          return;
+        }
         
         if (response && response.success) {
-          showStatus('✅ Snippet saved!', 'success');
+          console.log('✅ Saved!');
+          showStatus('✅ Saved to dashboard!', 'success');
+          submitBtn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+          
+          // Clear storage
+          chrome.storage.local.remove(['lastCapturedCode'], () => {
+            console.log('🧹 Cleared captured code');
+          });
+          
+          // Notify dashboard
+          chrome.runtime.sendMessage({ action: 'refreshDashboard' }, () => {});
+          
           setTimeout(() => {
             form.reset();
             window.close();
           }, 1000);
         } else {
-          console.error('❌ Save failed:', response);
-          showStatus('❌ Failed to save', 'error');
+          console.error('❌ Save failed:', response?.error);
+          showStatus('❌ Failed: ' + (response?.error || 'Unknown error'), 'error');
+          submitBtn.innerHTML = originalHTML;
+          submitBtn.disabled = false;
         }
       }
     );
   } catch (error) {
-    console.error('Save error:', error);
-    showStatus('❌ Failed to save snippet', 'error');
+    console.error('❌ Error:', error);
+    showStatus('❌ Error: ' + error.message, 'error');
   }
 });
 
@@ -125,6 +208,7 @@ form.addEventListener('submit', async (e) => {
 // STATUS MESSAGE
 // ============================================
 function showStatus(message, type) {
+  console.log(`📢 Status [${type}]:`, message);
   statusMessage.textContent = message;
   statusMessage.className = `status ${type}`;
   statusMessage.classList.remove('hidden');
@@ -132,6 +216,8 @@ function showStatus(message, type) {
   if (type === 'success' || type === 'error') {
     setTimeout(() => {
       statusMessage.classList.add('hidden');
-    }, 3000);
+    }, 4000);
   }
 }
+
+console.log('✅ Popup script loaded');

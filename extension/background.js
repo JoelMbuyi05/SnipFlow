@@ -1,143 +1,305 @@
 // ============================================
-// SNIPFLOW - BACKGROUND SERVICE WORKER
+// SNIPFLOW - BACKGROUND SERVICE WORKER (ENHANCED)
 // ============================================
 
-const DB_NAME = 'snipflow_db';
-const DB_VERSION = 1;
-const STORE_NAME = 'snippets';
+console.log('🔧 Background worker starting...');
 
-let db = null;
+let initialized = false;
 
 // ============================================
-// INITIALIZE DATABASE
+// INITIALIZE
 // ============================================
-async function initDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onerror = () => reject(request.error);
-    
-    request.onsuccess = () => {
-      db = request.result;
-      console.log('✅ Extension DB opened');
-      resolve(db);
-    };
-
-    request.onupgradeneeded = (event) => {
-      db = event.target.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        const objectStore = db.createObjectStore(STORE_NAME, { 
-          keyPath: 'id', 
-          autoIncrement: true 
-        });
-        objectStore.createIndex('title', 'title', { unique: false });
-        objectStore.createIndex('language', 'language', { unique: false });
-        objectStore.createIndex('createdAt', 'createdAt', { unique: false });
-        console.log('✅ Object store created');
-      }
-    };
-  });
+async function init() {
+  if (initialized) return;
+  
+  try {
+    await initStorage();
+    initialized = true;
+    console.log('✅ Background worker ready');
+  } catch (error) {
+    console.error('❌ Initialization failed:', error);
+  }
 }
 
 // ============================================
-// SAVE SNIPPET TO INDEXEDDB
+// LISTEN FOR MESSAGES
 // ============================================
-async function saveSnippet(snippet) {
-  if (!db) {
-    console.log('⏳ DB not ready, initializing...');
-    await initDB();
-  }
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('📨 Background received:', request.action);
   
-  return new Promise((resolve, reject) => {
+  init().then(() => {
     try {
-      const transaction = db.transaction([STORE_NAME], 'readwrite');
-      const store = transaction.objectStore(STORE_NAME);
+      // SAVE SNIPPET
+      if (request.action === 'saveSnippet') {
+        addSnippet(request.snippet)
+          .then(result => {
+            console.log('✅ Saved:', result.title);
+            sendResponse({ success: true, snippet: result });
+          })
+          .catch(error => {
+            console.error('❌ Save error:', error.message);
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
+      }
       
-      // Make sure snippet has all required fields
-      const completeSnippet = {
-        ...snippet,
-        createdAt: snippet.createdAt || new Date().toISOString(),
-        updatedAt: snippet.updatedAt || new Date().toISOString(),
-        views: snippet.views || 0,
-        isFavorite: snippet.isFavorite || false
-      };
+      // GET ALL SNIPPETS
+      if (request.action === 'getAllSnippets') {
+        getAllSnippets()
+          .then(snippets => {
+            console.log('✅ Retrieved', snippets.length, 'snippets');
+            sendResponse({ success: true, snippets: snippets });
+          })
+          .catch(error => {
+            console.error('❌ Get error:', error);
+            sendResponse({ success: true, snippets: [] });
+          });
+        return true;
+      }
       
-      const request = store.add(completeSnippet);
+      // GET SINGLE SNIPPET
+      if (request.action === 'getSnippet') {
+        getSnippet(request.id)
+          .then(snippet => {
+            sendResponse({ success: true, snippet });
+          })
+          .catch(error => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
+      }
       
-      request.onsuccess = () => {
-        const savedSnippet = { ...completeSnippet, id: request.result };
-        console.log('✅ Snippet saved to IndexedDB:', savedSnippet.title, 'ID:', request.result);
-        resolve(savedSnippet);
-      };
+      // UPDATE SNIPPET
+      if (request.action === 'updateSnippet') {
+        updateSnippet(request.id, request.updates)
+          .then(snippet => {
+            console.log('✅ Updated:', request.id);
+            sendResponse({ success: true, snippet });
+          })
+          .catch(error => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
+      }
       
-      request.onerror = () => {
-        console.error('❌ Failed to save snippet:', request.error);
-        reject(request.error);
-      };
+      // DELETE SNIPPET
+      if (request.action === 'deleteSnippet') {
+        deleteSnippet(request.id)
+          .then(() => {
+            console.log('✅ Deleted:', request.id);
+            sendResponse({ success: true });
+          })
+          .catch(error => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
+      }
+      
+      // TOGGLE FAVORITE
+      if (request.action === 'toggleFavorite') {
+        toggleFavorite(request.id)
+          .then(() => {
+            console.log('✅ Favorite toggled:', request.id);
+            sendResponse({ success: true });
+          })
+          .catch(error => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
+      }
+      
+      // INCREMENT VIEWS
+      if (request.action === 'incrementViews') {
+        incrementViews(request.id)
+          .then(() => {
+            sendResponse({ success: true });
+          })
+          .catch(error => {
+            sendResponse({ success: false });
+          });
+        return true;
+      }
+      
+      // SEARCH
+      if (request.action === 'search') {
+        searchSnippets(request.query)
+          .then(results => {
+            sendResponse({ success: true, snippets: results });
+          })
+          .catch(error => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
+      }
+      
+      // GET FAVORITES
+      if (request.action === 'getFavorites') {
+        getFavorites()
+          .then(snippets => {
+            sendResponse({ success: true, snippets });
+          })
+          .catch(error => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
+      }
+      
+      // GET RECENT
+      if (request.action === 'getRecent') {
+        getRecent(request.limit || 10)
+          .then(snippets => {
+            sendResponse({ success: true, snippets });
+          })
+          .catch(error => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
+      }
+      
+      // GET MOST USED
+      if (request.action === 'getMostUsed') {
+        getMostUsed(request.limit || 5)
+          .then(snippets => {
+            sendResponse({ success: true, snippets });
+          })
+          .catch(error => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
+      }
+      
+      // GET STATS
+      if (request.action === 'getStats') {
+        Promise.all([
+          getSnippetCount(),
+          getLanguageStats(),
+          getMostUsed(3)
+        ])
+          .then(([count, languages, mostUsed]) => {
+            sendResponse({ 
+              success: true, 
+              stats: { count, languages, mostUsed }
+            });
+          })
+          .catch(error => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
+      }
+      
+      // EXPORT
+      if (request.action === 'exportSnippets') {
+        getAllSnippets()
+          .then(snippets => {
+            const json = JSON.stringify(snippets, null, 2);
+            sendResponse({ 
+              success: true, 
+              data: json,
+              filename: `snipflow-backup-${new Date().toISOString().split('T')[0]}.json`
+            });
+          })
+          .catch(error => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
+      }
+      
+      // IMPORT
+      if (request.action === 'importSnippets') {
+        importSnippets(request.data)
+          .then(count => {
+            console.log('✅ Imported', count, 'snippets');
+            sendResponse({ success: true, imported: count });
+          })
+          .catch(error => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
+      }
+      
+      // DUPLICATE CHECK
+      if (request.action === 'checkDuplicate') {
+        checkDuplicate(request.code, request.excludeId)
+          .then(existing => {
+            sendResponse({ 
+              success: true, 
+              isDuplicate: !!existing,
+              existing 
+            });
+          })
+          .catch(error => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
+      }
+      
+      // DELETE MULTIPLE
+      if (request.action === 'deleteMultiple') {
+        deleteMultiple(request.ids)
+          .then(() => {
+            console.log('✅ Deleted', request.ids.length, 'snippets');
+            sendResponse({ success: true });
+          })
+          .catch(error => {
+            sendResponse({ success: false, error: error.message });
+          });
+        return true;
+      }
+      
     } catch (error) {
-      console.error('❌ Save error:', error);
-      reject(error);
+      console.error('❌ Handler error:', error);
+      sendResponse({ success: false, error: error.message });
     }
   });
-}
+  
+  return true; // Keep channel open
+});
 
 // ============================================
-// CREATE CONTEXT MENU (Right-click menu)
+// CREATE CONTEXT MENU
 // ============================================
 chrome.runtime.onInstalled.addListener(() => {
+  console.log('📦 Extension installed/updated');
+  
   chrome.contextMenus.create({
     id: 'saveToSnipflow',
     title: 'Save to Snipflow',
     contexts: ['page', 'selection']
   });
   
-  console.log('🚀 Snipflow extension installed!');
-  initDB();
+  chrome.contextMenus.create({
+    id: 'openDashboard',
+    title: 'Open Snipflow Dashboard',
+    contexts: ['page']
+  });
 });
 
 // ============================================
 // HANDLE CONTEXT MENU CLICK
 // ============================================
-chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === 'saveToSnipflow') {
-    console.log('📌 Context menu clicked');
+    console.log('📌 Save context menu clicked');
     
-    // Tell content script to capture (if not already done)
     chrome.tabs.sendMessage(tab.id, { action: 'captureFromContext' }, () => {
-      // Ignore errors if content script not ready
       if (chrome.runtime.lastError) {
         console.log('Content script not ready');
       }
     });
     
-    // Wait a bit then open popup
     setTimeout(() => {
-      chrome.action.openPopup();
-    }, 200);
+      try {
+        chrome.action.openPopup();
+      } catch (error) {
+        console.log('Popup already open or not available');
+      }
+    }, 100);
   }
-});
-
-// ============================================
-// LISTEN FOR MESSAGES
-// ============================================
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('📨 Message received:', request.action);
   
-  if (request.action === 'saveSnippet') {
-    saveSnippet(request.snippet)
-      .then(result => {
-        console.log('✅ Snippet saved:', result);
-        sendResponse({ success: true, snippet: result });
-      })
-      .catch(error => {
-        console.error('❌ Save failed:', error);
-        sendResponse({ success: false, error: error.message });
-      });
-    return true; // Keep channel open for async response
+  if (info.menuItemId === 'openDashboard') {
+    const appUrl = chrome.runtime.getURL('extension/app.html');
+    chrome.tabs.create({ url: appUrl });
   }
 });
 
-// ============================================
-// INITIALIZE
-// ============================================
-initDB();
+console.log('✅ Background worker loaded');

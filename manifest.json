@@ -2,12 +2,29 @@
   "manifest_version": 3,
   "name": "Snipflow",
   "version": "1.0.0",
-  "description": "Save code snippets from any website. Never lose a snippet again!",
+  "description": "Save code snippets from any website",
+  
   "icons": {
     "16": "assets/icons/icon16.png",
     "48": "assets/icons/icon48.png",
     "128": "assets/icons/icon128.png"
   },
+  
+  "permissions": [
+    "storage",
+    "contextMenus",
+    "tabs",
+    "scripting"
+  ],
+  
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  
+  "background": {
+    "service_worker": "extension/background.js"
+  },
+  
   "action": {
     "default_popup": "extension/popup.html",
     "default_icon": {
@@ -15,39 +32,20 @@
       "48": "assets/icons/icon48.png",
       "128": "assets/icons/icon128.png"
     },
-    "default_title": "Save to Snipflow"
+    "default_title": "Snipflow"
   },
-  "permissions": [
-    "activeTab",
-    "storage",
-    "contextMenus"
-  ],
-  "host_permissions": [
-    "http://*/*",
-    "https://*/*"
-  ],
+  
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
       "js": ["extension/content.js"],
-      "run_at": "document_idle"
+      "run_at": "document_start"
     }
   ],
-  "background": {
-    "service_worker": "extension/background.js"
-  },
-  "commands": {
-    "_execute_action": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+S",
-        "mac": "Command+Shift+S"
-      },
-      "description": "Open Snipflow popup"
-    }
-  },
+  
   "web_accessible_resources": [
     {
-      "resources": ["extension/popup.html"],
+      "resources": ["extension/app.html"],
       "matches": ["<all_urls>"]
     }
   ]

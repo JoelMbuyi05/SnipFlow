@@ -12,14 +12,23 @@ let rightClickedElement = null;
 document.addEventListener('contextmenu', (e) => {
   const target = e.target;
   
+  console.log('🖱️ Right-click detected on:', target.tagName, target.className);
+  
   // Check if clicked on code element
-  const codeElement = target.closest('pre, code, [class*="code"], [class*="highlight"]');
+  const codeElement = target.closest('pre, code, [class*="code"], [class*="highlight"], [class*="snippet"], [class*="block"]');
   
   if (codeElement) {
     rightClickedElement = codeElement;
-    console.log('🎯 Code element right-clicked');
+    console.log('🎯 Code element right-clicked:', codeElement);
     // Immediately capture on right-click
     captureCode(codeElement);
+  } else {
+    // If no code element, check if we have selected text
+    const selectedText = window.getSelection().toString().trim();
+    if (selectedText && selectedText.length > 20) {
+      console.log('✅ Selected text detected (length:', selectedText.length + ')');
+      rightClickedElement = target;
+    }
   }
 }, true);
 
@@ -332,6 +341,18 @@ function highlightCodeBlocks() {
 // ============================================
 console.log('🚀 Snipflow content script loaded');
 highlightCodeBlocks();
+
+// DEBUG: Expose test function to console
+window.snipflowTest = () => {
+  console.log('🧪 Testing Snipflow...');
+  const codeBlocks = detectCodeBlocks();
+  console.log('Found code blocks:', codeBlocks.length);
+  if (codeBlocks.length > 0) {
+    console.log('Capturing first code block...');
+    captureCode(codeBlocks[0]);
+  }
+};
+console.log('💡 Tip: Run window.snipflowTest() in console to test capture');
 
 // Re-detect code blocks when page updates (for SPAs)
 const observer = new MutationObserver(() => {
