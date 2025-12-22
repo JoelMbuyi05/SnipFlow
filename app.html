@@ -4,21 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
     <link rel="icon" type="image/png" sizes="36x36" href="assets/icons/s-icon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <title>Dashboard - Snipflow</title>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {}
+        }
+      }
+    </script>
   </head>
-  <body class="bg-slate-50 h-screen overflow-hidden">
+  <body class="bg-slate-50 dark:bg-slate-900 h-screen overflow-hidden">
 
     <!-- Top Navbar -->
-    <nav class="bg-white border-b border-slate-200 px-6 py-4">
+    <nav class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4 sticky top-0 z-40">
       <div class="flex items-center justify-between">
         <!-- Logo -->
         <a href="index.html" class="flex items-center gap-3">
           <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center text-white">
             <i class="fas fa-code text-xl"></i>
           </div>
-          <span class="text-2xl font-bold text-blue-900">Snipflow</span>
+          <span class="text-2xl font-bold text-blue-900 dark:text-blue-100">Snipflow</span>
         </a>
 
         <!-- Search Bar -->
@@ -27,20 +36,25 @@
             <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
             <input 
               type="text" 
+              id="searchInput"
               placeholder="Search snippets by title, code, or tags..." 
-              class="w-full pl-12 pr-4 py-3 bg-slate-100 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+              class="w-full pl-12 pr-4 py-3 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-800 transition"
             >
           </div>
         </div>
 
         <!-- Actions -->
         <div class="flex items-center gap-3">
-          <button class="bg-gradient-to-r from-blue-500 to-blue-700 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-blue-500/30 transition flex items-center gap-2">
+          <button id="createBtn" class="bg-gradient-to-r from-blue-500 to-blue-700 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-blue-500/30 transition flex items-center gap-2">
             <i class="fas fa-plus"></i>
             Add Snippet
           </button>
-          <button class="w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-lg flex items-center justify-center transition">
-            <i class="fas fa-user text-slate-600"></i>
+          <!-- Dark Mode Toggle -->
+          <button type="button" id="themeToggle" class="w-10 h-10 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg flex items-center justify-center transition">
+            <i class="fas fa-moon text-slate-600 dark:text-yellow-400"></i>
+          </button>
+          <button class="w-10 h-10 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg flex items-center justify-center transition">
+            <i class="fas fa-user text-slate-600 dark:text-slate-300"></i>
           </button>
         </div>
       </div>
@@ -50,28 +64,28 @@
     <div class="flex h-[calc(100vh-73px)]">
       
       <!-- Sidebar -->
-      <aside class="w-64 bg-white border-r border-slate-200 p-6 overflow-y-auto">
+      <aside class="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-6 overflow-y-auto">
         
         <!-- Quick Stats -->
-        <div class="mb-6 p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-          <div class="text-sm text-slate-600 mb-1">Total Snippets</div>
-          <div class="text-3xl font-bold text-blue-900">0</div>
+        <div class="mb-6 p-4 bg-gradient-to-br from-blue-50 dark:from-blue-900 to-blue-100 dark:to-blue-800 rounded-lg border border-blue-200 dark:border-blue-700">
+          <div class="text-sm text-slate-600 dark:text-slate-300 mb-1">Total Snippets</div>
+          <div class="text-3xl font-bold text-blue-900 dark:text-blue-100" id="snippetCount">0</div>
         </div>
 
         <!-- Filters -->
         <div class="mb-6">
-          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Quick Filters</h3>
+          <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Quick Filters</h3>
           <div class="space-y-1">
-            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-50 text-blue-700 font-medium">
+            <a href="#" onclick="filterSnippets('all'); return false;" class="filter-btn flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-100 font-medium">
               <i class="fas fa-th-large w-4"></i>
               <span>All Snippets</span>
-              <span class="ml-auto text-xs bg-blue-200 text-blue-700 px-2 py-0.5 rounded-full">0</span>
+              <span class="ml-auto text-xs bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-100 px-2 py-0.5 rounded-full" id="allCount">0</span>
             </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 font-medium transition">
+            <a href="#" onclick="filterSnippets('favorites'); return false;" class="filter-btn flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium transition">
               <i class="fas fa-star w-4 text-yellow-500"></i>
               <span>Favorites</span>
             </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 font-medium transition">
+            <a href="#" onclick="filterSnippets('recent'); return false;" class="filter-btn flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium transition">
               <i class="fas fa-clock w-4 text-slate-400"></i>
               <span>Recent</span>
             </a>
@@ -79,55 +93,40 @@
         </div>
 
         <!-- Send Feedback -->
-        <button id="feedbackBtn" class="w-full bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg px-4 py-4 text-left transition mt-20">
-          <div class="font-semibold text-sm mb-1 text-black">Send Feedback</div>
-          <div class="text-xs text-blue-600">Help us improve Snipflow with your suggestions!</div>
+        <button id="feedbackBtn" class="w-full bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-100 rounded-lg px-4 py-4 text-left transition mt-20">
+          <div class="font-semibold text-sm mb-1">Send Feedback</div>
+          <div class="text-xs text-blue-600 dark:text-blue-300">Help us improve Snipflow with your suggestions!</div>
         </button>
-
-        <!-- Languages 
-        <div class="mb-6">
-          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Languages</h3>
-          <div class="space-y-1" id="languages-list">
-            <p class="text-sm text-slate-400 italic px-3 py-2">No languages yet</p>
-          </div>
-        </div>
-
-        // Tags
-        <div>
-          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Tags</h3>
-          <div class="flex flex-wrap gap-2" id="tags-list">
-            <p class="text-sm text-slate-400 italic">No tags yet</p>
-          </div>
-        </div> -->
 
       </aside> 
 
       <!-- Main Content -->
-      <main class="flex-1 overflow-y-auto p-8">
+      <main class="flex-1 overflow-y-auto p-8 bg-slate-50 dark:bg-slate-900">
         
         <!-- Header -->
         <div class="mb-6">
-          <h1 class="text-3xl font-bold text-slate-900 mb-2">All Snippets</h1>
-          <p class="text-slate-600">Manage and organize your code snippets</p>
+          <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">All Snippets</h1>
+          <p class="text-slate-600 dark:text-slate-400">Manage and organize your code snippets</p>
         </div>
 
         <!-- Empty State -->
-        <div class="flex flex-col items-center justify-center py-20">
-          <h2 class="text-2xl font-bold text-slate-900 mb-3">No snippets yet</h2>
-          <p class="text-slate-600 mb-6 text-center max-w-md">
-            Start building your code library by adding your first snippet. You can save code from any website using our browser extension.
+        <div id="emptyState" class="flex flex-col items-center justify-center py-20">
+          <i class="fas fa-code text-6xl text-slate-300 dark:text-slate-600 mb-4"></i>
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-3">No snippets yet</h2>
+          <p class="text-slate-600 dark:text-slate-400 mb-6 text-center max-w-md">
+            Start building your code library by adding your first snippet.
           </p>
         </div>
 
         <!-- Snippet Grid (Hidden when empty) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden" id="snippetsGrid">
           
           <!-- Snippet Card Example -->
-          <div class="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-lg hover:border-blue-300 transition cursor-pointer group">
+          <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600 transition cursor-pointer group">
             <div class="flex items-start justify-between mb-3">
               <div class="flex-1">
-                <h3 class="font-bold text-slate-900 mb-1 group-hover:text-blue-600 transition">Array Map Example</h3>
-                <div class="flex items-center gap-2 text-xs text-slate-500">
+                <h3 class="font-bold text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Array Map Example</h3>
+                <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                   <span class="flex items-center gap-1">
                     <span class="w-2 h-2 bg-yellow-400 rounded-full"></span>
                     JavaScript
@@ -137,7 +136,7 @@
                 </div>
               </div>
               <button class="opacity-0 group-hover:opacity-100 transition">
-                <i class="fas fa-star text-slate-300 hover:text-yellow-500"></i>
+                <i class="fas fa-star text-slate-300 dark:text-slate-600 hover:text-yellow-500"></i>
               </button>
             </div>
             
@@ -147,10 +146,10 @@
 
             <div class="flex items-center justify-between">
               <div class="flex gap-1">
-                <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-medium">array</span>
-                <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-medium">map</span>
+                <span class="px-2 py-1 bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded text-xs font-medium">array</span>
+                <span class="px-2 py-1 bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded text-xs font-medium">map</span>
               </div>
-              <button class="text-slate-400 hover:text-blue-600 transition">
+              <button class="text-slate-400 dark:text-slate-600 hover:text-blue-600 dark:hover:text-blue-400 transition">
                 <i class="fas fa-copy"></i>
               </button>
             </div>
@@ -162,40 +161,125 @@
 
     </div>
 
-    <!-- Feedback Modal-->
-    <div id="feedbackModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+    <!-- Create Snippet Modal-->
+    <div id="createModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         
         <!-- Modal Header -->
-        <div class="p-6 border-b border-slate-200 flex items-center justify-between">
+        <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-800">
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Create New Snippet</h2>
+          <button onclick="closeCreateModal()" class="w-8 h-8 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg flex items-center justify-center transition">
+            <i class="fas fa-times text-slate-400 dark:text-slate-500"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <form id="snippetForm" class="p-6">
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Title *</label>
+            <input 
+              type="text" 
+              id="snippetTitle"
+              placeholder="e.g., React useState Hook"
+              class="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              required
+            >
+          </div>
+
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Language *</label>
+            <select id="snippetLanguage" class="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required>
+              <option value="">Select...</option>
+              <option value="javascript">JavaScript</option>
+              <option value="python">Python</option>
+              <option value="java">Java</option>
+              <option value="typescript">TypeScript</option>
+              <option value="html">HTML</option>
+              <option value="css">CSS</option>
+              <option value="php">PHP</option>
+              <option value="ruby">Ruby</option>
+              <option value="go">Go</option>
+              <option value="rust">Rust</option>
+              <option value="c++">C++</option>
+              <option value="c#">C#</option>
+            </select>
+          </div>
+
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Code *</label>
+            <textarea 
+              id="snippetCode"
+              rows="10"
+              placeholder="Paste code..."
+              class="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition font-mono text-sm resize-none"
+              required
+            ></textarea>
+          </div>
+
+          <div class="mb-6">
+            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Tags (comma separated)</label>
+            <input 
+              type="text" 
+              id="snippetTags"
+              placeholder="e.g., react, hooks"
+              class="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            >
+          </div>
+
+          <div class="flex gap-3">
+            <button 
+              type="button"
+              onclick="closeCreateModal()"
+              class="flex-1 px-6 py-3 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit"
+              class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition"
+            >
+              <i class="fas fa-save"></i> Save
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+
+    <!-- Feedback Modal-->
+    <div id="feedbackModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg">
+        
+        <!-- Modal Header -->
+        <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-              <i class="fas fa-comment text-blue-600 text-xl"></i>
+            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+              <i class="fas fa-comment text-blue-600 dark:text-blue-400 text-xl"></i>
             </div>
             <div>
-              <h2 class="text-xl font-bold text-slate-900">Send Feedback</h2>
-              <p class="text-sm text-slate-600">We'd love to hear your thoughts about Snipflow!</p>
+              <h2 class="text-xl font-bold text-slate-900 dark:text-white">Send Feedback</h2>
+              <p class="text-sm text-slate-600 dark:text-slate-400">We'd love to hear your thoughts about Snipflow!</p>
             </div>
           </div>
-          <button id="closeModal" class="w-8 h-8 hover:bg-slate-100 rounded-lg flex items-center justify-center transition">
-            <i class="fas fa-times text-slate-400"></i>
+          <button onclick="closeFeedbackModal()" class="w-8 h-8 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg flex items-center justify-center transition">
+            <i class="fas fa-times text-slate-400 dark:text-slate-500"></i>
           </button>
         </div>
 
         <!-- Modal Body -->
         <form id="feedbackForm" class="p-6">
           <label class="block mb-2">
-            <span class="text-sm font-semibold text-slate-700">Your Feedback</span>
+            <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">Your Feedback</span>
           </label>
           <textarea 
             id="feedbackText"
             rows="6"
-            placeholder="Tell us what you think about Snipflow, suggest features, report bugs, or share your experience..."
-            class="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
+            placeholder="Tell us what you think about Snipflow..."
+            class="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
             required
           ></textarea>
           
-          <p class="text-xs text-slate-500 mt-3 mb-6">
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-3 mb-6">
             Your feedback helps us improve Snipflow for everyone!
           </p>
 
@@ -203,14 +287,13 @@
           <div class="flex gap-3">
             <button 
               type="button"
-              id="cancelBtn"
-              class="flex-1 px-6 py-3 border border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 transition"
+              onclick="closeFeedbackModal()"
+              class="flex-1 px-6 py-3 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition"
             >
               Cancel
             </button>
             <button 
               type="submit"
-              id="submitBtn"
               class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition"
             >
               <i class="fas fa-paper-plane"></i>
@@ -222,114 +305,105 @@
       </div>
     </div>
 
-    <!-- EmailJS CDN -->
-
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-
-    <script src="js/storage.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
     <script src="js/app.js"></script>
 
     <script>
-      
       // ============================================
-      // EMAILJS CONFIGURATION
+      // DARK MODE TOGGLE - Run immediately
       // ============================================
-      const EMAILJS_PUBLIC_KEY = 'LJEwgATDPchKnSlud';
-      const EMAILJS_SERVICE_ID = 'service_svwgkg9';
-      const EMAILJS_TEMPLATE_ID = 'template_qwwsi12';
-      
-      // Initialize EmailJS
-      emailjs.init(EMAILJS_PUBLIC_KEY);
+      (function() {
+        const html = document.documentElement;
+        
+        // Load saved theme immediately
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+          html.classList.add('dark');
+        } else {
+          html.classList.remove('dark');
+        }
+        
+        // Wait for DOM, then setup listener
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', setupThemeToggle);
+        } else {
+          setupThemeToggle();
+        }
+        
+        function setupThemeToggle() {
+          const themeToggle = document.getElementById('themeToggle');
+          if (!themeToggle) return;
+          
+          // Update icon based on current state
+          updateIcon();
+          
+          // Listen for clicks
+          themeToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            
+            updateIcon();
+            console.log('Theme toggled to:', isDark ? 'dark' : 'light');
+          });
+        }
+        
+        function updateIcon() {
+          const themeToggle = document.getElementById('themeToggle');
+          if (!themeToggle) return;
+          
+          const icon = themeToggle.querySelector('i');
+          const isDark = html.classList.contains('dark');
+          
+          if (isDark) {
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+          } else {
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
+          }
+        }
+      })();
 
       // ============================================
-      // FEEDBACK MODAL LOGIC
+      // MODAL FUNCTIONS
       // ============================================
-      const feedbackBtn = document.getElementById('feedbackBtn');
-      const feedbackModal = document.getElementById('feedbackModal');
-      const closeModal = document.getElementById('closeModal');
-      const cancelBtn = document.getElementById('cancelBtn');
-      const feedbackForm = document.getElementById('feedbackForm');
-      const feedbackText = document.getElementById('feedbackText');
-
-      // Open modal
-      feedbackBtn.addEventListener('click', () => {
-        feedbackModal.classList.remove('hidden');
+      document.getElementById('createBtn').addEventListener('click', () => {
+        document.getElementById('createModal').classList.remove('hidden');
       });
 
-      // Close modal
-      const closeModalHandler = () => {
-        feedbackModal.classList.add('hidden');
-        feedbackText.value = '';
-      };
+      function closeCreateModal() {
+        document.getElementById('createModal').classList.add('hidden');
+        document.getElementById('snippetForm').reset();
+      }
 
-      closeModal.addEventListener('click', closeModalHandler);
-      cancelBtn.addEventListener('click', closeModalHandler);
+      document.getElementById('feedbackBtn').addEventListener('click', () => {
+        document.getElementById('feedbackModal').classList.remove('hidden');
+      });
+
+      function closeFeedbackModal() {
+        document.getElementById('feedbackModal').classList.add('hidden');
+        document.getElementById('feedbackForm').reset();
+      }
 
       // Close on outside click
-      feedbackModal.addEventListener('click', (e) => {
-        if (e.target === feedbackModal) {
-          closeModalHandler();
-        }
+      document.getElementById('createModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('createModal')) closeCreateModal();
       });
 
-      // Handle form submit
-      feedbackForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const feedback = feedbackText.value.trim();
-        const submitBtn = document.getElementById('submitBtn');
-        
-        if (!feedback) {
-          alert('Please write your feedback before sending.');
-          return;
-        }
-
-      // Show loading state
-        const originalHTML = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-        submitBtn.disabled = true;
-
-        try {
-          // Send email via EmailJS
-          await emailjs.send(
-            EMAILJS_SERVICE_ID, 
-            EMAILJS_TEMPLATE_ID,
-            {
-              from_name: 'Snipflow User',
-              message: feedback,
-              sent_date: new Date().toLocaleString()
-            }
-          );
-          
-          // Success!
-          submitBtn.innerHTML = '<i class="fas fa-check"></i> Sent!';
-          submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-          submitBtn.classList.add('bg-green-600');
-          
-          setTimeout(() => {
-            alert('✅ Thank you for your feedback! We truly appreciate it.');
-            closeModalHandler();
-            submitBtn.innerHTML = originalHTML;
-            submitBtn.classList.remove('bg-green-600');
-            submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-          }, 1000);
-
-        } catch (error) {
-          console.error('Failed to send feedback:', error);
-          submitBtn.innerHTML = '<i class="fas fa-times"></i> Failed';
-          submitBtn.classList.add('bg-red-600');
-          
-          setTimeout(() => {
-            alert('❌ Failed to send feedback. Please check your EmailJS configuration or try again later.');
-            submitBtn.innerHTML = originalHTML;
-            submitBtn.classList.remove('bg-red-600');
-            submitBtn.classList.add('bg-blue-600');
-          }, 2000);
-        } finally {
-          submitBtn.disabled = false;
-        }
+      document.getElementById('feedbackModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('feedbackModal')) closeFeedbackModal();
       });
 
+      // Filter function placeholder
+      function filterSnippets(filter) {
+        console.log('Filter:', filter);
+        // This will be implemented in app.js
+      }
     </script>
+
   </body>
 </html>
