@@ -53,7 +53,8 @@
           <button type="button" id="themeToggle" class="w-10 h-10 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg flex items-center justify-center transition">
             <i class="fas fa-moon text-slate-600 dark:text-yellow-400"></i>
           </button>
-          <button class="w-10 h-10 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg flex items-center justify-center transition">
+          <!-- User Profile Button - Will be replaced by dropdown -->
+          <button id="userProfileBtn" class="w-10 h-10 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg flex items-center justify-center transition">
             <i class="fas fa-user text-slate-600 dark:text-slate-300"></i>
           </button>
         </div>
@@ -405,5 +406,28 @@
       }
     </script>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js"></script>
+
+    <script type="module">
+      import { firebaseConfig } from './firebase/config.js';
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js';
+      import { getAuth } from 'https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js';
+      import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js';
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      // Make available globally for other scripts
+      window.firebase = { app, auth, db };
+      
+      console.log('✅ Firebase initialized');
+    </script>
+
+    <script src="js/auth.js"></script>
   </body>
 </html>
