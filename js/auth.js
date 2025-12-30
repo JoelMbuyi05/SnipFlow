@@ -36,7 +36,7 @@ function checkExistingUser() {
 // ============================================
 function loadGoogleSignIn() {
   return new Promise((resolve) => {
-    if (window.google) {
+    if (window.google && window.google.accounts) {
       console.log('✅ Google already loaded');
       resolve();
       return;
@@ -49,7 +49,21 @@ function loadGoogleSignIn() {
     script.defer = true;
     script.onload = () => {
       console.log('✅ Google library loaded');
-      resolve();
+      // Wait for google to be available
+      let attempts = 0;
+      const checkGoogle = setInterval(() => {
+        if (window.google && window.google.accounts) {
+          console.log('✅ Google accounts available');
+          clearInterval(checkGoogle);
+          resolve();
+        }
+        attempts++;
+        if (attempts > 20) {
+          console.error('❌ Google accounts not available');
+          clearInterval(checkGoogle);
+          resolve();
+        }
+      }, 100);
     };
     script.onerror = () => {
       console.error('❌ Failed to load Google');
@@ -66,28 +80,33 @@ async function handleGoogleSignIn() {
   try {
     console.log('🔐 Starting Google sign-in...');
 
-    if (!window.google) {
-      throw new Error('Google library not loaded');
-    }
-
-    // Initialize if not already done
-    if (!window.google.accounts?.id) {
-      console.log('Initializing Google...');
+    // Make sure Google is loaded
+    if (!window.google || !window.google.accounts) {
+      console.log('Google not ready, loading...');
       await loadGoogleSignIn();
-      
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: processGoogleResponse
-      });
     }
 
-    // Show Google One Tap
-    window.google.accounts.id.prompt((notification) => {
-      console.log('Google prompt:', notification);
+    if (!window.google || !window.google.accounts) {
+      throw new Error('Google library failed to load');
+    }
+
+    console.log('✅ Google ready');
+
+    // Initialize Google
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: processGoogleResponse
+    });
+
+    console.log('✅ Google initialized');
+
+    // Show One Tap UI
+    window.google.accounts.id.prompt(() => {
+      console.log('One Tap shown');
     });
 
   } catch (error) {
-    console.error('❌ Google sign-in error:', error);
+    console.error('❌ Google sign-in error:', error.message);
     window.showNotification?.('❌ ' + error.message, 'error');
   }
 }
@@ -322,8 +341,11 @@ function initAuth() {
   if (existingUser) {
     console.log('✅ User already logged in');
   } else {
-    console.log('📥 Loading Google library...');
-    loadGoogleSignIn();
+    console.log('📥 Pre-loading Google library...');
+    // Load Google early, don't wait
+    loadGoogleSignIn().then(() => {
+      console.log('✅ Google pre-loaded');
+    });
   }
   
   authReady = true;
@@ -334,5 +356,12 @@ if (document.readyState === 'loading') {
 } else {
   initAuth();
 }
+
+// Also try to load after a small delay
+setTimeout(() => {
+  if (!window.google) {
+    loadGoogleSignIn();
+  }
+}, 500);
 
 console.log('✅ Auth module ready');
