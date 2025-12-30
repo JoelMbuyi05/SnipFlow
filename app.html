@@ -53,8 +53,10 @@
           <button type="button" id="themeToggle" class="w-10 h-10 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg flex items-center justify-center transition">
             <i class="fas fa-moon text-slate-600 dark:text-yellow-400"></i>
           </button>
-          <!-- User Profile Container -->
-          <div id="userMenu"></div>
+          <!-- User Profile Button -->
+          <button id="userProfileBtn" class="w-10 h-10 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg flex items-center justify-center transition">
+            <i class="fas fa-user text-slate-600 dark:text-slate-300"></i>
+          </button>
         </div>
       </div>
     </nav>
@@ -75,19 +77,19 @@
         <div class="mb-6">
           <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Quick Filters</h3>
           <div class="space-y-1">
-            <a href="#" onclick="filterSnippets('all'); return false;" class="filter-btn flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-100 font-medium">
+            <button onclick="handleFilterClick(event)" class="filter-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-100 font-medium">
               <i class="fas fa-th-large w-4"></i>
               <span>All Snippets</span>
               <span class="ml-auto text-xs bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-100 px-2 py-0.5 rounded-full" id="allCount">0</span>
-            </a>
-            <a href="#" onclick="filterSnippets('favorites'); return false;" class="filter-btn flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium transition">
+            </button>
+            <button onclick="handleFilterClick(event)" class="filter-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium transition">
               <i class="fas fa-star w-4 text-yellow-500"></i>
               <span>Favorites</span>
-            </a>
-            <a href="#" onclick="filterSnippets('recent'); return false;" class="filter-btn flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium transition">
+            </button>
+            <button onclick="handleFilterClick(event)" class="filter-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium transition">
               <i class="fas fa-clock w-4 text-slate-400"></i>
               <span>Recent</span>
-            </a>
+            </button>
           </div>
         </div>
 
@@ -117,44 +119,8 @@
           </p>
         </div>
 
-        <!-- Snippet Grid (Hidden when empty) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden" id="snippetsGrid">
-          
-          <!-- Snippet Card Example -->
-          <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600 transition cursor-pointer group">
-            <div class="flex items-start justify-between mb-3">
-              <div class="flex-1">
-                <h3 class="font-bold text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Array Map Example</h3>
-                <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                  <span class="flex items-center gap-1">
-                    <span class="w-2 h-2 bg-yellow-400 rounded-full"></span>
-                    JavaScript
-                  </span>
-                  <span>•</span>
-                  <span>2 days ago</span>
-                </div>
-              </div>
-              <button class="opacity-0 group-hover:opacity-100 transition">
-                <i class="fas fa-star text-slate-300 dark:text-slate-600 hover:text-yellow-500"></i>
-              </button>
-            </div>
-            
-            <div class="bg-slate-900 rounded-lg p-3 mb-3 font-mono text-xs text-slate-300 overflow-hidden">
-              <code>const numbers = [1, 2, 3];<br>const doubled = numbers.map(n => n * 2);</code>
-            </div>
-
-            <div class="flex items-center justify-between">
-              <div class="flex gap-1">
-                <span class="px-2 py-1 bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded text-xs font-medium">array</span>
-                <span class="px-2 py-1 bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded text-xs font-medium">map</span>
-              </div>
-              <button class="text-slate-400 dark:text-slate-600 hover:text-blue-600 dark:hover:text-blue-400 transition">
-                <i class="fas fa-copy"></i>
-              </button>
-            </div>
-          </div>
-
-        </div>
+        <!-- Snippet Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden" id="snippetsGrid"></div>
 
       </main>
 
@@ -282,7 +248,6 @@
             Your feedback helps us improve Snipflow for everyone!
           </p>
 
-          <!-- Buttons -->
           <div class="flex gap-3">
             <button 
               type="button"
@@ -293,6 +258,7 @@
             </button>
             <button 
               type="submit"
+              id="submitBtn"
               class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition"
             >
               <i class="fas fa-paper-plane"></i>
@@ -305,16 +271,26 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-    <script src="js/app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
+    <!-- ===== NO FIREBASE SDK NEEDED - USING REST API ===== -->
     <script>
-      // ============================================
-      // DARK MODE TOGGLE - Run immediately
-      // ============================================
+      console.log('✅ Using Firebase REST API (no SDK)');
+    </script>
+
+    <!-- ===== EMAILJS CONFIGURATION ===== -->
+    <script>
+      const EMAILJS_PUBLIC_KEY = 'LJEwgATDPchKnSlud';
+      const EMAILJS_SERVICE_ID = 'service_svwgkg9';
+      const EMAILJS_TEMPLATE_ID = 'template_qwwsi12';
+
+      emailjs.init(EMAILJS_PUBLIC_KEY);
+    </script>
+
+    <!-- ===== DARK MODE TOGGLE ===== -->
+    <script>
       (function() {
         const html = document.documentElement;
-        
-        // Load saved theme immediately
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark') {
           html.classList.add('dark');
@@ -322,110 +298,37 @@
           html.classList.remove('dark');
         }
         
-        // Wait for DOM, then setup listener
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', setupThemeToggle);
-        } else {
-          setupThemeToggle();
-        }
-        
-        function setupThemeToggle() {
-          const themeToggle = document.getElementById('themeToggle');
-          if (!themeToggle) return;
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+          const updateIcon = () => {
+            const icon = themeToggle.querySelector('i');
+            const isDark = html.classList.contains('dark');
+            if (isDark) {
+              icon.classList.remove('fa-moon');
+              icon.classList.add('fa-sun');
+            } else {
+              icon.classList.remove('fa-sun');
+              icon.classList.add('fa-moon');
+            }
+          };
           
-          // Update icon based on current state
           updateIcon();
-          
-          // Listen for clicks
           themeToggle.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            
             html.classList.toggle('dark');
             const isDark = html.classList.contains('dark');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            
             updateIcon();
-            console.log('Theme toggled to:', isDark ? 'dark' : 'light');
           });
         }
-        
-        function updateIcon() {
-          const themeToggle = document.getElementById('themeToggle');
-          if (!themeToggle) return;
-          
-          const icon = themeToggle.querySelector('i');
-          const isDark = html.classList.contains('dark');
-          
-          if (isDark) {
-            icon.classList.remove('fa-moon');
-            icon.classList.add('fa-sun');
-          } else {
-            icon.classList.remove('fa-sun');
-            icon.classList.add('fa-moon');
-          }
-        }
       })();
-
-      // ============================================
-      // MODAL FUNCTIONS
-      // ============================================
-      document.getElementById('createBtn').addEventListener('click', () => {
-        document.getElementById('createModal').classList.remove('hidden');
-      });
-
-      function closeCreateModal() {
-        document.getElementById('createModal').classList.add('hidden');
-        document.getElementById('snippetForm').reset();
-      }
-
-      document.getElementById('feedbackBtn').addEventListener('click', () => {
-        document.getElementById('feedbackModal').classList.remove('hidden');
-      });
-
-      function closeFeedbackModal() {
-        document.getElementById('feedbackModal').classList.add('hidden');
-        document.getElementById('feedbackForm').reset();
-      }
-
-      // Close on outside click
-      document.getElementById('createModal').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('createModal')) closeCreateModal();
-      });
-
-      document.getElementById('feedbackModal').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('feedbackModal')) closeFeedbackModal();
-      });
-
-      // Filter function placeholder
-      function filterSnippets(filter) {
-        console.log('Filter:', filter);
-        // This will be implemented in app.js
-      }
     </script>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js"></script>
-
-    <script type="module">
-      import { firebaseConfig } from './firebase/config.js';
-      import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js';
-      import { getAuth } from 'https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js';
-      import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js';
-
-      // Initialize Firebase
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
-      const db = getFirestore(app);
-
-      // Make available globally for other scripts
-      window.firebase = { app, auth, db };
-      
-      console.log('✅ Firebase initialized');
-    </script>
-
+    <!-- ===== LOAD APP MODULES (IN CORRECT ORDER) ===== -->
+    <script src="firebase/db.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+
   </body>
 </html>

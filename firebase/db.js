@@ -1,57 +1,65 @@
 // ============================================
-// FIREBASE/DB.JS - DATABASE LAYER
+// DATABASE LAYER - FIREBASE REST API
 // ============================================
-// Handles ALL database operations
-// UI code should NOT be here
-// This can be reused in other projects
 
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  getDoc,
-  doc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where,
-  orderBy,
-  Timestamp 
-} from 'https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js';
+console.log('📦 Database module loading...');
 
-// Get database reference
-function getDb() {
-  return window.firebase?.db;
-}
+const FIREBASE_API_KEY = "AIzaSyBgxvD7XNhIX_yHg2vVPa9tzfMC6zwCN_g";
+const FIREBASE_PROJECT_ID = "snipflow-951ed";
+const DB_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
 
 // ============================================
 // CREATE - Add new snippet
 // ============================================
-export async function createSnippet(userId, snippetData) {
+async function createSnippet(userId, snippetData) {
   try {
-    const db = getDb();
-    if (!db) throw new Error('Database not initialized');
+    const token = localStorage.getItem('snipflow_token');
+    if (!token) throw new Error('Not authenticated');
 
-    const snippetsRef = collection(db, 'snippets');
+    const docData = {
+      fields: {
+        userId: { stringValue: userId },
+        title: { stringValue: snippetData.title?.trim() || '' },
+        code: { stringValue: snippetData.code?.trim() || '' },
+        language: { stringValue: snippetData.language || 'javascript' },
+        tags: {
+          arrayValue: {
+            values: (snippetData.tags || '')
+              .split(',')
+              .map(t => ({ stringValue: t.trim().toLowerCase() }))
+              .filter(t => t.stringValue)
+          }
+        },
+        description: { stringValue: snippetData.description?.trim() || '' },
+        isFavorite: { booleanValue: false },
+        views: { integerValue: '0' },
+        createdAt: { timestampValue: new Date().toISOString() },
+        updatedAt: { timestampValue: new Date().toISOString() }
+      }
+    };
+
+    const response = await fetch(
+      `${DB_URL}/snippets?key=${FIREBASE_API_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(docData)
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'Failed to create snippet');
+    }
+
+    const data = await response.json();
+    const docId = data.name.split('/').pop();
     
-    const docRef = await addDoc(snippetsRef, {
-      userId,
-      title: snippetData.title.trim(),
-      code: snippetData.code.trim(),
-      language: snippetData.language,
-      tags: snippetData.tags
-        .split(',')
-        .map(t => t.trim().toLowerCase())
-        .filter(t => t.length > 0),
-      description: snippetData.description || '',
-      isFavorite: false,
-      views: 0,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-    });
-
-    console.log('✅ Snippet created:', docRef.id);
-    return docRef.id;
+    console.log('✅ Snippet created:', docId);
+    return docId;
 
   } catch (error) {
     console.error('❌ Create error:', error);
@@ -62,89 +70,115 @@ export async function createSnippet(userId, snippetData) {
 // ============================================
 // READ - Get all user's snippets
 // ============================================
-export async function getAllSnippets(userId) {
+async function getAllSnippets(userId) {
   try {
-    const db = getDb();
-    if (!db) throw new Error('Database not initialized');
+    const token = localStorage.getItem('snipflow_token');
+    if (!token) {
+      console.log('❌ Not authenticated');
+      return [];
+    }
 
-    const snippetsRef = collection(db, 'snippets');
-    const q = query(
-      snippetsRef,
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc')
+    if (!userId) {
+      console.warn('⚠️ No userId provided');
+      return [];
+    }
+
+    const response = await fetch(
+      `${DB_URL}/snippets?key=${FIREBASE_API_KEY}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
     );
 
-    const querySnapshot = await getDocs(q);
+    if (!response.ok) {
+      console.error('Failed to fetch snippets');
+      return [];
+    }
+
+    const data = await response.json();
     const snippets = [];
 
-    querySnapshot.forEach(doc => {
-      snippets.push({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+    if (data.documents) {
+      data.documents.forEach(doc => {
+        const fields = doc.fields;
+        
+        // Filter by userId
+        if (fields.userId?.stringValue !== userId) return;
+
+        snippets.push({
+          id: doc.name.split('/').pop(),
+          title: fields.title?.stringValue || '',
+          code: fields.code?.stringValue || '',
+          language: fields.language?.stringValue || 'javascript',
+          tags: fields.tags?.arrayValue?.values?.map(v => v.stringValue) || [],
+          description: fields.description?.stringValue || '',
+          isFavorite: fields.isFavorite?.booleanValue || false,
+          views: parseInt(fields.views?.integerValue || 0),
+          createdAt: new Date(fields.createdAt?.timestampValue || new Date()),
+          updatedAt: new Date(fields.updatedAt?.timestampValue || new Date())
+        });
       });
-    });
+    }
+
+    // Sort by created date (newest first)
+    snippets.sort((a, b) => b.createdAt - a.createdAt);
 
     console.log('✅ Loaded', snippets.length, 'snippets');
     return snippets;
 
   } catch (error) {
     console.error('❌ Read error:', error);
-    throw error;
-  }
-}
-
-// ============================================
-// READ - Get single snippet
-// ============================================
-export async function getSnippet(snippetId) {
-  try {
-    const db = getDb();
-    if (!db) throw new Error('Database not initialized');
-
-    const snippetRef = doc(db, 'snippets', snippetId);
-    const docSnap = await getDoc(snippetRef);
-
-    if (!docSnap.exists()) {
-      throw new Error('Snippet not found');
-    }
-
-    return {
-      id: docSnap.id,
-      ...docSnap.data(),
-      createdAt: docSnap.data().createdAt?.toDate() || new Date(),
-      updatedAt: docSnap.data().updatedAt?.toDate() || new Date(),
-    };
-
-  } catch (error) {
-    console.error('❌ Get error:', error);
-    throw error;
+    return [];
   }
 }
 
 // ============================================
 // UPDATE - Edit snippet
 // ============================================
-export async function updateSnippet(snippetId, updates) {
+async function updateSnippet(snippetId, updates) {
   try {
-    const db = getDb();
-    if (!db) throw new Error('Database not initialized');
+    const token = localStorage.getItem('snipflow_token');
+    if (!token) throw new Error('Not authenticated');
 
-    const snippetRef = doc(db, 'snippets', snippetId);
-    
-    // If updating tags, parse them
-    if (updates.tags && typeof updates.tags === 'string') {
-      updates.tags = updates.tags
-        .split(',')
-        .map(t => t.trim().toLowerCase())
-        .filter(t => t.length > 0);
+    if (!snippetId) throw new Error('Snippet ID required');
+
+    const fields = {};
+
+    if (updates.title) fields.title = { stringValue: updates.title };
+    if (updates.code) fields.code = { stringValue: updates.code };
+    if (updates.language) fields.language = { stringValue: updates.language };
+    if (updates.tags) {
+      fields.tags = {
+        arrayValue: {
+          values: (typeof updates.tags === 'string' 
+            ? updates.tags.split(',')
+            : updates.tags
+          ).map(t => ({ stringValue: t.trim().toLowerCase() }))
+        }
+      };
     }
+    
+    fields.updatedAt = { timestampValue: new Date().toISOString() };
 
-    await updateDoc(snippetRef, {
-      ...updates,
-      updatedAt: Timestamp.now(),
-    });
+    const response = await fetch(
+      `${DB_URL}/snippets/${snippetId}?key=${FIREBASE_API_KEY}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ fields })
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'Failed to update');
+    }
 
     console.log('✅ Snippet updated:', snippetId);
     return snippetId;
@@ -158,13 +192,26 @@ export async function updateSnippet(snippetId, updates) {
 // ============================================
 // DELETE - Remove snippet
 // ============================================
-export async function deleteSnippet(snippetId) {
+async function deleteSnippet(snippetId) {
   try {
-    const db = getDb();
-    if (!db) throw new Error('Database not initialized');
+    const token = localStorage.getItem('snipflow_token');
+    if (!token) throw new Error('Not authenticated');
 
-    const snippetRef = doc(db, 'snippets', snippetId);
-    await deleteDoc(snippetRef);
+    if (!snippetId) throw new Error('Snippet ID required');
+
+    const response = await fetch(
+      `${DB_URL}/snippets/${snippetId}?key=${FIREBASE_API_KEY}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to delete');
+    }
 
     console.log('✅ Snippet deleted:', snippetId);
     return true;
@@ -178,24 +225,41 @@ export async function deleteSnippet(snippetId) {
 // ============================================
 // TOGGLE FAVORITE
 // ============================================
-export async function toggleFavorite(snippetId, currentState) {
+async function toggleFavorite(snippetId, currentState) {
   try {
-    const db = getDb();
-    if (!db) throw new Error('Database not initialized');
+    const token = localStorage.getItem('snipflow_token');
+    if (!token) throw new Error('Not authenticated');
 
-    const snippetRef = doc(db, 'snippets', snippetId);
+    if (!snippetId) throw new Error('Snippet ID required');
+
     const newState = !currentState;
 
-    await updateDoc(snippetRef, {
-      isFavorite: newState,
-      updatedAt: Timestamp.now(),
-    });
+    const response = await fetch(
+      `${DB_URL}/snippets/${snippetId}?key=${FIREBASE_API_KEY}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          fields: {
+            isFavorite: { booleanValue: newState },
+            updatedAt: { timestampValue: new Date().toISOString() }
+          }
+        })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to toggle favorite');
+    }
 
     console.log('✅ Favorite toggled:', snippetId);
     return newState;
 
   } catch (error) {
-    console.error('❌ Toggle favorite error:', error);
+    console.error('❌ Toggle error:', error);
     throw error;
   }
 }
@@ -203,27 +267,42 @@ export async function toggleFavorite(snippetId, currentState) {
 // ============================================
 // SEARCH (Client-side filtering)
 // ============================================
-export function searchSnippets(snippets, searchTerm) {
-  if (!searchTerm) return snippets;
+function searchSnippets(snippets, searchTerm) {
+  if (!searchTerm || searchTerm.trim().length === 0) return snippets;
   
   const term = searchTerm.toLowerCase();
-  return snippets.filter(s =>
-    s.title.toLowerCase().includes(term) ||
-    s.code.toLowerCase().includes(term) ||
-    s.tags?.some(t => t.includes(term))
-  );
+  return snippets.filter(s => {
+    const titleMatch = (s.title || '').toLowerCase().includes(term);
+    const codeMatch = (s.code || '').toLowerCase().includes(term);
+    const tagsMatch = Array.isArray(s.tags) && s.tags.some(t => t.includes(term));
+    
+    return titleMatch || codeMatch || tagsMatch;
+  });
 }
 
 // ============================================
 // FILTER BY TYPE
 // ============================================
-export function filterByType(snippets, filterType) {
+function filterByType(snippets, filterType) {
+  if (!Array.isArray(snippets)) return [];
+  
   if (filterType === 'favorites') {
-    return snippets.filter(s => s.isFavorite);
+    return snippets.filter(s => s.isFavorite === true);
   } else if (filterType === 'recent') {
     return snippets.slice(0, 10);
   }
-  return snippets; // 'all'
+  return snippets;
 }
+
+// ============================================
+// MAKE FUNCTIONS AVAILABLE GLOBALLY
+// ============================================
+window.createSnippet = createSnippet;
+window.getAllSnippets = getAllSnippets;
+window.updateSnippet = updateSnippet;
+window.deleteSnippet = deleteSnippet;
+window.toggleFavorite = toggleFavorite;
+window.searchSnippets = searchSnippets;
+window.filterByType = filterByType;
 
 console.log('✅ Database module loaded');
