@@ -1,5 +1,5 @@
 // ============================================
-// FIREBASE AUTH - GOOGLE OAUTH + REST API
+// FIREBASE AUTH - EMAIL/PASSWORD (TEMPORARY)
 // ============================================
 
 console.log('🔐 Auth module loading...');
@@ -8,23 +8,22 @@ let currentUser = null;
 let authReady = false;
 
 const FIREBASE_API_KEY = "AIzaSyBgxvD7XNhIX_yHg2vVPa9tzfMC6zwCN_g";
-const GOOGLE_CLIENT_ID = "927323615328-hiq8b6kmijv55v7pe8qrp7g0k9cjs632.apps.googleusercontent.com";
 
 // ============================================
-// CHECK FOR EXISTING USER ON PAGE LOAD
+// CHECK FOR EXISTING USER
 // ============================================
 function checkExistingUser() {
-  console.log('🔍 Checking for existing user in localStorage...');
+  console.log('🔍 Checking for existing user...');
   try {
     const stored = localStorage.getItem('snipflow_user');
     if (stored) {
       currentUser = JSON.parse(stored);
-      console.log('✅ Found existing user:', currentUser.email);
+      console.log('✅ Found user:', currentUser.email);
       updateUI(currentUser);
       return true;
     }
   } catch (e) {
-    console.warn('⚠️ Could not load user from localStorage:', e);
+    console.warn('⚠️ Could not load user:', e);
     localStorage.removeItem('snipflow_user');
     localStorage.removeItem('snipflow_token');
   }
@@ -32,166 +31,163 @@ function checkExistingUser() {
 }
 
 // ============================================
-// LOAD GOOGLE SIGN-IN LIBRARY
+// SIGN UP WITH EMAIL/PASSWORD
 // ============================================
-function loadGoogleSignIn() {
-  return new Promise((resolve) => {
-    if (window.google) {
-      console.log('✅ Google Sign-In already loaded');
-      resolve();
-      return;
-    }
-
-    console.log('📥 Loading Google Sign-In library...');
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      console.log('✅ Google Sign-In library loaded');
-      resolve();
-    };
-    script.onerror = () => {
-      console.error('❌ Failed to load Google Sign-In library');
-      resolve();
-    };
-    document.head.appendChild(script);
-  });
-}
-
-// ============================================
-// INITIALIZE GOOGLE SIGN-IN
-// ============================================
-async function initializeGoogleSignIn() {
-  // Check for existing user first
-  if (checkExistingUser()) {
-    console.log('✅ User already logged in, skipping Google init');
-    return;
-  }
-
-  await loadGoogleSignIn();
-
-  if (!window.google) {
-    console.error('❌ Google library not available');
-    return;
-  }
-
-  console.log('🔐 Initializing Google Sign-In...');
-
+async function signUpWithEmail(email, password) {
   try {
-    window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: handleGoogleSignIn,
-      auto_select: false
-    });
-
-    // Render the button
-    const btn = document.getElementById('googleSignInBtn');
-    if (btn && !btn.hasAttribute('data-google-initialized')) {
-      window.google.accounts.id.renderButton(btn, {
-        theme: 'outline',
-        size: 'large',
-        text: 'signup_with'
-      });
-      btn.setAttribute('data-google-initialized', 'true');
-      console.log('✅ Google Sign-In button rendered');
-    }
-
-  } catch (error) {
-    console.error('❌ Google Sign-In init error:', error);
-  }
-}
-
-// ============================================
-// HANDLE GOOGLE SIGN-IN
-// ============================================
-async function handleGoogleSignIn(response) {
-  try {
-    console.log('🎉 Google response received');
-
-    if (!response.credential) {
-      throw new Error('No credential received from Google');
-    }
-
-    // Decode JWT to get user info
-    const credential = response.credential;
-    const parts = credential.split('.');
+    console.log('📝 Signing up with email:', email);
     
-    if (parts.length !== 3) {
-      throw new Error('Invalid JWT format');
-    }
-
-    let decoded;
-    try {
-      decoded = JSON.parse(atob(parts[1]));
-    } catch (e) {
-      throw new Error('Could not decode JWT');
-    }
-
-    console.log('✅ Decoded user:', decoded.email);
-
-    // Sign in with Firebase using the Google ID token
-    console.log('🔥 Signing in with Firebase...');
-    
-    const signInResponse = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${FIREBASE_API_KEY}`,
+    const response = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FIREBASE_API_KEY}`,
       {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          postBody: `id_token=${credential}&providerId=google.com`,
-          requestUri: window.location.href,
+          email: email,
+          password: password,
           returnSecureToken: true
         })
       }
     );
 
-    if (!signInResponse.ok) {
-      const error = await signInResponse.json();
-      throw new Error(error.error?.message || 'Firebase sign-in failed');
-    }
+    const data = await response.json();
 
-    const data = await signInResponse.json();
+    if (data.error) {
+      // If user exists, try to sign in instead
+      if (data.error.message === 'EMAIL_EXISTS') {
+        console.log('📧 Email exists, signing in instead...');
+        return await signInWithEmail(email, password);
+      }
+      throw new Error(data.error.message);
+    }
 
     if (!data.idToken) {
-      throw new Error('No idToken received from Firebase');
+      throw new Error('No token received');
     }
 
-    // Create user object
     currentUser = {
       uid: data.localId,
-      email: decoded.email,
+      email: data.email,
       idToken: data.idToken,
-      displayName: decoded.name || decoded.email.split('@')[0],
-      photoUrl: decoded.picture
+      displayName: email.split('@')[0]
     };
 
-    // Save to localStorage IMMEDIATELY
-    console.log('💾 Saving user to localStorage...');
     localStorage.setItem('snipflow_user', JSON.stringify(currentUser));
     localStorage.setItem('snipflow_token', data.idToken);
-    localStorage.setItem('snipflow_expires', Date.now() + (3600 * 1000)); // 1 hour
 
-    console.log('✅ User saved! Email:', currentUser.email);
-    authReady = true;
-
-    // Update UI
-    updateUI(currentUser);
-
-    // Show success message
-    window.showNotification?.('✅ Welcome to Snipflow!', 'success');
-
-    // Redirect after delay
-    setTimeout(() => {
-      console.log('🚀 Redirecting to /app.html');
-      window.location.href = '/app.html';
-    }, 1500);
+    console.log('✅ Signed up and logged in:', email);
+    return currentUser;
 
   } catch (error) {
-    console.error('❌ Sign-in error:', error.message);
-    window.showNotification?.('❌ Sign-in failed: ' + error.message, 'error');
+    console.error('❌ Sign up error:', error.message);
+    throw error;
+  }
+}
+
+// ============================================
+// SIGN IN WITH EMAIL/PASSWORD
+// ============================================
+async function signInWithEmail(email, password) {
+  try {
+    console.log('🔐 Signing in with email:', email);
+    
+    const response = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+          returnSecureToken: true
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.error) {
+      throw new Error(data.error.message);
+    }
+
+    if (!data.idToken) {
+      throw new Error('No token received');
+    }
+
+    currentUser = {
+      uid: data.localId,
+      email: data.email,
+      idToken: data.idToken,
+      displayName: data.displayName || email.split('@')[0]
+    };
+
+    localStorage.setItem('snipflow_user', JSON.stringify(currentUser));
+    localStorage.setItem('snipflow_token', data.idToken);
+
+    console.log('✅ Signed in:', email);
+    return currentUser;
+
+  } catch (error) {
+    console.error('❌ Sign in error:', error.message);
+    throw error;
+  }
+}
+
+// ============================================
+// HANDLE AUTH FORM
+// ============================================
+async function handleAuthSubmit(e) {
+  e.preventDefault();
+
+  const emailInput = document.getElementById('authEmail');
+  const passwordInput = document.getElementById('authPassword');
+  const btn = document.getElementById('authBtn');
+
+  const email = emailInput?.value?.trim();
+  const password = passwordInput?.value;
+
+  if (!email || !password) {
+    window.showNotification?.('Please enter email and password', 'error');
+    return;
+  }
+
+  if (password.length < 6) {
+    window.showNotification?.('Password must be at least 6 characters', 'error');
+    return;
+  }
+
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+    }
+
+    const user = await signUpWithEmail(email, password);
+
+    window.showNotification?.('✅ Welcome to Snipflow!', 'success');
+    updateUI(user);
+
+    // Close modal
+    const modal = document.getElementById('authModal');
+    if (modal) modal.classList.add('hidden');
+
+    // Clear form
+    if (emailInput) emailInput.value = '';
+    if (passwordInput) passwordInput.value = '';
+
+    // Redirect
+    setTimeout(() => {
+      window.location.href = '/app.html';
+    }, 1000);
+
+  } catch (error) {
+    console.error('Auth error:', error);
+    window.showNotification?.('❌ ' + error.message, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+    }
   }
 }
 
@@ -204,35 +200,21 @@ async function signOutUser() {
 
     console.log('🔓 Signing out...');
 
-    // Clear Google session
-    if (window.google && currentUser?.email) {
-      try {
-        window.google.accounts.id.revoke(currentUser.email, () => {
-          console.log('✅ Google session revoked');
-        });
-      } catch (e) {
-        console.log('⚠️ Could not revoke Google session:', e.message);
-      }
-    }
-
-    // Clear localStorage
     localStorage.removeItem('snipflow_user');
     localStorage.removeItem('snipflow_token');
-    localStorage.removeItem('snipflow_expires');
 
     currentUser = null;
     authReady = true;
 
     console.log('✅ Signed out');
-    window.showNotification?.('Signed out successfully', 'success');
+    window.showNotification?.('Signed out', 'success');
 
-    // Redirect to home
     setTimeout(() => {
       window.location.href = '/';
     }, 1000);
 
   } catch (error) {
-    console.error('❌ Sign-out error:', error);
+    console.error('Sign out error:', error);
     window.showNotification?.('Sign-out failed', 'error');
   }
 }
@@ -241,7 +223,6 @@ async function signOutUser() {
 // GET CURRENT USER
 // ============================================
 function getCurrentUser() {
-  // Try to load from localStorage if not in memory
   if (!currentUser) {
     try {
       const stored = localStorage.getItem('snipflow_user');
@@ -250,22 +231,20 @@ function getCurrentUser() {
       if (stored && token) {
         currentUser = JSON.parse(stored);
         currentUser.idToken = token;
-        console.log('📋 Loaded user from storage:', currentUser.email);
+        console.log('✅ Loaded user from storage:', currentUser.email);
       }
     } catch (e) {
-      console.warn('⚠️ Could not load user from storage:', e.message);
-      localStorage.removeItem('snipflow_user');
-      localStorage.removeItem('snipflow_token');
+      console.warn('Could not load user:', e.message);
     }
   }
 
-  if (currentUser && currentUser.email) {
-    console.log('✅ getCurrentUser() returning:', currentUser.email);
+  if (currentUser?.email) {
+    console.log('✅ getCurrentUser() → ', currentUser.email);
     return currentUser;
-  } else {
-    console.log('❌ getCurrentUser() returning: null (no user)');
-    return null;
   }
+
+  console.log('❌ getCurrentUser() → null');
+  return null;
 }
 
 // ============================================
@@ -279,8 +258,8 @@ function updateUI(user) {
   const userNameEl = document.getElementById('userName');
   const userEmailEl = document.getElementById('userEmail');
 
-  if (userNameEl) userNameEl.textContent = user.displayName || user.email || 'User';
-  if (userEmailEl) userEmailEl.textContent = user.email || '';
+  if (userNameEl) userNameEl.textContent = user.displayName || user.email;
+  if (userEmailEl) userEmailEl.textContent = user.email;
 
   createProfileDropdown(user);
 }
@@ -298,7 +277,7 @@ function createProfileDropdown(user) {
 
   const dropdownHTML = `
     <div class="relative group" id="profileDropdown">
-      <button class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-lg flex items-center justify-center hover:shadow-lg transition text-sm font-bold border-2 border-blue-400" title="User Profile">
+      <button class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-lg flex items-center justify-center hover:shadow-lg transition text-sm font-bold border-2 border-blue-400">
         ${initial}
       </button>
 
@@ -311,7 +290,7 @@ function createProfileDropdown(user) {
             </div>
             <div class="flex-1">
               <div class="font-semibold text-sm">${user.displayName || 'User'}</div>
-              <div class="text-xs text-blue-100 break-all">${user.email || ''}</div>
+              <div class="text-xs text-blue-100 break-all">${user.email}</div>
             </div>
           </div>
         </div>
@@ -370,26 +349,35 @@ function showNotification(message, type = 'info') {
 window.signOutUser = signOutUser;
 window.getCurrentUser = getCurrentUser;
 window.showNotification = showNotification;
+window.handleAuthSubmit = handleAuthSubmit;
 
 // ============================================
-// INITIALIZE ON PAGE LOAD
+// INITIALIZE
 // ============================================
 console.log('🚀 Auth module starting...');
 
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    console.log('📄 DOM loaded, initializing...');
-    initializeGoogleSignIn();
-  });
-} else {
-  console.log('📄 DOM already loaded, initializing...');
-  initializeGoogleSignIn();
+function initAuth() {
+  console.log('📄 Initializing auth...');
+  
+  // Check for existing user
+  const existingUser = checkExistingUser();
+  
+  if (existingUser) {
+    console.log('✅ User already logged in, showing profile');
+    authReady = true;
+  } else {
+    console.log('❌ No user logged in');
+    authReady = true;
+  }
 }
 
-// Also try to init after a small delay to ensure DOM is ready
-setTimeout(() => {
-  initializeGoogleSignIn();
-}, 500);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAuth);
+} else {
+  initAuth();
+}
+
+// Also init after a small delay
+setTimeout(initAuth, 100);
 
 console.log('✅ Auth module ready');

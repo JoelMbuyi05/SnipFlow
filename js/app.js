@@ -19,6 +19,56 @@ let isAuthReady = false;
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 App starting...');
   
+  // Wait a bit for auth to be ready
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Check if user is logged in
+  const user = window.getCurrentUser?.();
+  if (user && user.email) {
+    console.log('✅ User logged in:', user.email);
+    // Update UI with user
+    const userNameEl = document.getElementById('userName');
+    const userEmailEl = document.getElementById('userEmail');
+    const userProfileBtn = document.getElementById('userProfileBtn');
+    
+    if (userProfileBtn && user.email) {
+      const initial = (user.displayName || user.email).charAt(0).toUpperCase();
+      const dropdownHTML = `
+        <div class="relative group">
+          <button class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-lg flex items-center justify-center hover:shadow-lg transition text-sm font-bold border-2 border-blue-400" title="User Profile">
+            ${initial}
+          </button>
+
+          <div class="hidden group-hover:block absolute right-0 mt-2 w-72 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden">
+
+            <div class="bg-gradient-to-r from-blue-500 to-blue-700 px-6 py-4 text-white">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-white text-blue-600 rounded-full flex items-center justify-center font-bold text-lg">
+                  ${initial}
+                </div>
+                <div class="flex-1">
+                  <div class="font-semibold text-sm">${user.displayName || 'User'}</div>
+                  <div class="text-xs text-blue-100 break-all">${user.email}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="border-t border-slate-200 dark:border-slate-700"></div>
+
+            <div class="py-2">
+              <button onclick="window.signOutUser?.(); event.stopPropagation();" class="w-full text-left px-6 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-slate-700 flex items-center gap-3 transition font-medium">
+                <i class="fas fa-sign-out-alt w-4"></i>
+                <span class="text-sm">Sign Out</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      userProfileBtn.outerHTML = dropdownHTML;
+      console.log('✅ Profile dropdown created');
+    }
+  }
+  
   await waitForUser();
   setupEventListeners();
   setupModalListeners();
@@ -190,13 +240,19 @@ async function handleFormSubmit(e) {
 
   // CHECK USER IS LOGGED IN
   const user = window.getCurrentUser?.();
-  console.log('🔍 Form submit - checking user...');
+  console.log('🔍 Form submit - Checking user...');
   console.log('   localStorage snipflow_user:', localStorage.getItem('snipflow_user') ? 'EXISTS' : 'MISSING');
   console.log('   localStorage snipflow_token:', localStorage.getItem('snipflow_token') ? 'EXISTS' : 'MISSING');
-  console.log('   getCurrentUser() result:', user?.email || 'NULL');
+  console.log('   getCurrentUser() returned:', user ? 'USER OBJECT' : 'null');
   
-  if (!user || !user.email) {
-    console.error('❌ User not authenticated! User object:', user);
+  if (user) {
+    console.log('   User email:', user.email);
+    console.log('   User token:', user.idToken ? 'EXISTS' : 'MISSING');
+  }
+  
+  if (!user || !user.email || !user.idToken) {
+    console.error('❌ User not properly authenticated!');
+    console.error('   User object:', user);
     window.showNotification?.('❌ You must be logged in to save snippets', 'error');
     return;
   }
