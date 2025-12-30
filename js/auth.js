@@ -537,8 +537,8 @@ function initAuth() {
     console.log('✅ User already logged in');
     authReady = true;
   } else {
-    console.log('❌ No user logged in');
-    initializeGoogleSignIn();
+    console.log('❌ No user logged in, waiting for Google to initialize');
+    // Don't initialize Google yet - wait for modal to open
     authReady = true;
   }
 }
@@ -550,5 +550,17 @@ if (document.readyState === 'loading') {
 }
 
 setTimeout(initAuth, 100);
+
+// Wait for modal to open, then initialize Google
+document.addEventListener('click', function(e) {
+  if (e.target.textContent.includes('Get Started') || e.target.textContent.includes('Sign in')) {
+    setTimeout(() => {
+      if (!window.google) {
+        console.log('Modal opened, initializing Google...');
+        initializeGoogleSignIn();
+      }
+    }, 500);
+  }
+});
 
 console.log('✅ Auth module ready');
