@@ -18,40 +18,16 @@ window.handleGoogleSignIn = async function() {
     // Create Google Auth Provider
     const provider = new firebase.auth.GoogleAuthProvider();
     
-    // Sign in with popup
-    const result = await auth.signInWithPopup(provider);
-    
-    // Get user info
-    const user = result.user;
-    
-    // Save user data to localStorage
-    const userData = {
-      uid: user.uid,
-      email: user.email,
-      name: user.displayName,
-      photoURL: user.photoURL
-    };
-    
-    localStorage.setItem('snipflow_user', JSON.stringify(userData));
-    
-    console.log('✅ Login successful:', user.email);
-    
-    // Redirect to dashboard
-    window.location.href = 'app.html';
+    // Use REDIRECT instead of popup (more reliable)
+    await auth.signInWithRedirect(provider);
     
   } catch (error) {
     console.error('❌ Sign-in error:', error);
-    
-    if (error.code === 'auth/popup-closed-by-user') {
-      // User closed the popup, do nothing
-      return;
-    }
-    
     alert('Sign-in failed. Please try again.');
   }
 };
 
-// Check authentication state
+// Check for redirect result on page load
 window.addEventListener('load', () => {
   const auth = window.getAuth();
   
@@ -59,6 +35,32 @@ window.addEventListener('load', () => {
     console.warn('Auth not ready yet');
     return;
   }
+  
+  // Check if returning from redirect
+  auth.getRedirectResult()
+    .then((result) => {
+      if (result.user) {
+        // User just signed in via redirect
+        console.log('✅ Sign-in successful:', result.user.email);
+        
+        const userData = {
+          uid: result.user.uid,
+          email: result.user.email,
+          name: result.user.displayName,
+          photoURL: result.user.photoURL
+        };
+        
+        localStorage.setItem('snipflow_user', JSON.stringify(userData));
+        
+        // Redirect to dashboard if on index page
+        if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+          window.location.href = 'app.html';
+        }
+      }
+    })
+    .catch((error) => {
+      console.error('Redirect error:', error);
+    });
   
   // Listen for auth state changes
   auth.onAuthStateChanged((user) => {
@@ -82,8 +84,10 @@ window.addEventListener('load', () => {
       
       // If on app.html, redirect to index
       if (window.location.pathname.includes('app.html')) {
-        localStorage.removeItem('snipflow_user');
-        window.location.href = 'index.html';
+        const savedUser = localStorage.getItem('snipflow_user');
+        if (!savedUser) {
+          window.location.href = 'index.html';
+        }
       }
     }
   });
