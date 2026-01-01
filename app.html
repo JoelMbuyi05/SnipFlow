@@ -271,13 +271,19 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- ===== LOAD APP MODULES (IN CORRECT ORDER) ===== -->
+    <script src="firebase/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-
-    <!-- ===== NO FIREBASE SDK NEEDED - USING REST API ===== -->
-    <script>
-      console.log('✅ Using Firebase REST API (no SDK)');
-    </script>
-
+    
     <!-- ===== EMAILJS CONFIGURATION ===== -->
     <script>
       const EMAILJS_PUBLIC_KEY = 'LJEwgATDPchKnSlud';
@@ -324,11 +330,6 @@
         }
       })();
     </script>
-
-    <!-- ===== LOAD APP MODULES (IN CORRECT ORDER) ===== -->
-    <script src="firebase/db.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/app.js"></script>
 
   </body>
 </html>
