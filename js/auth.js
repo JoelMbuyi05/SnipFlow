@@ -2,6 +2,8 @@
 // AUTHENTICATION HANDLER - FIREBASE AUTH
 // ==========================================
 
+let authInitialized = false;
+
 // Handle Google Sign-In
 window.handleGoogleSignIn = async function() {
   console.log('🔐 Starting Google Sign-In...');
@@ -19,6 +21,7 @@ window.handleGoogleSignIn = async function() {
     const provider = new firebase.auth.GoogleAuthProvider();
     
     // Use REDIRECT instead of popup (more reliable)
+    console.log('Redirecting to Google...');
     await auth.signInWithRedirect(provider);
     
   } catch (error) {
@@ -27,21 +30,27 @@ window.handleGoogleSignIn = async function() {
   }
 };
 
-// Check for redirect result on page load
-window.addEventListener('load', () => {
+// Initialize auth on page load
+function initializeAuth() {
   const auth = window.getAuth();
   
   if (!auth) {
-    console.warn('Auth not ready yet');
+    console.warn('Auth not ready yet, retrying...');
+    setTimeout(initializeAuth, 100);
     return;
   }
   
-  // Check if returning from redirect
+  if (authInitialized) return;
+  authInitialized = true;
+  
+  console.log('🔐 Initializing authentication...');
+  
+  // Check for redirect result FIRST
   auth.getRedirectResult()
     .then((result) => {
-      if (result.user) {
-        // User just signed in via redirect
-        console.log('✅ Sign-in successful:', result.user.email);
+      if (result && result.user) {
+        // User just signed in via redirect!
+        console.log('✅ Sign-in successful via redirect:', result.user.email);
         
         const userData = {
           uid: result.user.uid,
@@ -52,14 +61,39 @@ window.addEventListener('load', () => {
         
         localStorage.setItem('snipflow_user', JSON.stringify(userData));
         
-        // Redirect to dashboard if on index page
-        if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+        // Force redirect to dashboard
+        console.log('Redirecting to dashboard...');
+        window.location.href = 'app.html';
+        return;
+      }
+      
+      // No redirect result, check current auth state
+      return auth.currentUser;
+    })
+    .then((user) => {
+      if (user) {
+        console.log('✅ User already signed in:', user.email);
+        
+        const userData = {
+          uid: user.uid,
+          email: user.email,
+          name: user.displayName,
+          photoURL: user.photoURL
+        };
+        
+        localStorage.setItem('snipflow_user', JSON.stringify(userData));
+        
+        // If on index page, go to dashboard
+        if (window.location.pathname.includes('index.html') || window.location.pathname === '/' || window.location.pathname === '') {
+          console.log('Redirecting to dashboard...');
           window.location.href = 'app.html';
         }
       }
     })
     .catch((error) => {
-      console.error('Redirect error:', error);
+      if (error.code !== 'auth/network-request-failed') {
+        console.error('❌ Auth error:', error);
+      }
     });
   
   // Listen for auth state changes
@@ -78,6 +112,15 @@ window.addEventListener('load', () => {
       
       localStorage.setItem('snipflow_user', JSON.stringify(userData));
       
+      // If on index page, redirect to dashboard
+      const currentPath = window.location.pathname;
+      if (currentPath.includes('index.html') || currentPath === '/' || currentPath === '') {
+        console.log('Auth state changed - redirecting to dashboard...');
+        setTimeout(() => {
+          window.location.href = 'app.html';
+        }, 500);
+      }
+      
     } else {
       // User is signed out
       console.log('👤 No user signed in');
@@ -86,12 +129,21 @@ window.addEventListener('load', () => {
       if (window.location.pathname.includes('app.html')) {
         const savedUser = localStorage.getItem('snipflow_user');
         if (!savedUser) {
+          console.log('No auth - redirecting to home...');
           window.location.href = 'index.html';
         }
       }
     }
   });
-});
+}
+
+// Start auth initialization when page loads
+window.addEventListener('load', initializeAuth);
+
+// Also try immediately in case load already fired
+if (document.readyState === 'complete') {
+  initializeAuth();
+}
 
 // Logout function
 window.firebaseLogout = async function() {
