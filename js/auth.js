@@ -1,100 +1,56 @@
 // ==========================================
-// AUTHENTICATION HANDLER - FIREBASE AUTH
+// AUTHENTICATION HANDLER - FIREBASE UI
 // ==========================================
 
-let authInitialized = false;
+let ui = null;
 
-// Handle Google Sign-In
-window.handleGoogleSignIn = async function() {
-  console.log('🔐 Starting Google Sign-In...');
+// Handle Google Sign-In with Firebase UI
+window.handleGoogleSignIn = function() {
+  console.log('🔐 Starting Google Sign-In with Firebase UI...');
   
-  try {
-    const auth = window.getAuth();
-    
-    if (!auth) {
-      console.error('Firebase Auth not initialized yet');
-      alert('Please wait a moment and try again');
-      return;
-    }
-    
-    // Create Google Auth Provider
-    const provider = new firebase.auth.GoogleAuthProvider();
-    
-    // Use REDIRECT instead of popup (more reliable)
-    console.log('Redirecting to Google...');
-    await auth.signInWithRedirect(provider);
-    
-  } catch (error) {
-    console.error('❌ Sign-in error:', error);
-    alert('Sign-in failed. Please try again.');
-  }
-};
-
-// Initialize auth on page load
-function initializeAuth() {
   const auth = window.getAuth();
   
   if (!auth) {
-    console.warn('Auth not ready yet, retrying...');
-    setTimeout(initializeAuth, 100);
+    console.error('Firebase Auth not initialized yet');
+    alert('Please wait a moment and try again');
     return;
   }
   
-  if (authInitialized) return;
-  authInitialized = true;
+  // Create Firebase UI instance if not exists
+  if (!ui) {
+    ui = new firebaseui.auth.AuthUI(auth);
+  }
   
-  console.log('🔐 Initializing authentication...');
-  
-  // Check for redirect result FIRST
-  auth.getRedirectResult()
-    .then((result) => {
-      if (result && result.user) {
-        // User just signed in via redirect!
-        console.log('✅ Sign-in successful via redirect:', result.user.email);
-        
-        const userData = {
-          uid: result.user.uid,
-          email: result.user.email,
-          name: result.user.displayName,
-          photoURL: result.user.photoURL
-        };
-        
-        localStorage.setItem('snipflow_user', JSON.stringify(userData));
-        
-        // Force redirect to dashboard
-        console.log('Redirecting to dashboard...');
-        window.location.href = 'app.html';
-        return;
-      }
-      
-      // No redirect result, check current auth state
-      return auth.currentUser;
-    })
-    .then((user) => {
-      if (user) {
-        console.log('✅ User already signed in:', user.email);
-        
-        const userData = {
-          uid: user.uid,
-          email: user.email,
-          name: user.displayName,
-          photoURL: user.photoURL
-        };
-        
-        localStorage.setItem('snipflow_user', JSON.stringify(userData));
-        
-        // If on index page, go to dashboard
-        if (window.location.pathname.includes('index.html') || window.location.pathname === '/' || window.location.pathname === '') {
-          console.log('Redirecting to dashboard...');
-          window.location.href = 'app.html';
+  // Firebase UI configuration
+  const uiConfig = {
+    signInSuccessUrl: 'app.html',
+    signInOptions: [
+      {
+        provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+        customParameters: {
+          prompt: 'select_account'
         }
       }
-    })
-    .catch((error) => {
-      if (error.code !== 'auth/network-request-failed') {
-        console.error('❌ Auth error:', error);
-      }
-    });
+    ],
+    tosUrl: 'index.html',
+    privacyPolicyUrl: 'index.html'
+  };
+  
+  // Start Firebase UI
+  ui.start('#firebaseui-auth-container', uiConfig);
+};
+
+// Check authentication state
+window.addEventListener('load', () => {
+  const auth = window.getAuth();
+  
+  if (!auth) {
+    console.warn('Auth not ready yet');
+    setTimeout(() => window.location.reload(), 1000);
+    return;
+  }
+  
+  console.log('🔐 Checking authentication state...');
   
   // Listen for auth state changes
   auth.onAuthStateChanged((user) => {
@@ -102,7 +58,6 @@ function initializeAuth() {
       // User is signed in
       console.log('✅ User authenticated:', user.email);
       
-      // Update localStorage
       const userData = {
         uid: user.uid,
         email: user.email,
@@ -112,13 +67,11 @@ function initializeAuth() {
       
       localStorage.setItem('snipflow_user', JSON.stringify(userData));
       
-      // If on index page, redirect to dashboard
-      const currentPath = window.location.pathname;
-      if (currentPath.includes('index.html') || currentPath === '/' || currentPath === '') {
-        console.log('Auth state changed - redirecting to dashboard...');
-        setTimeout(() => {
-          window.location.href = 'app.html';
-        }, 500);
+      // If on index page, go to dashboard
+      const path = window.location.pathname;
+      if (path.includes('index.html') || path === '/' || path === '') {
+        console.log('Redirecting to dashboard...');
+        window.location.href = 'app.html';
       }
       
     } else {
@@ -135,15 +88,7 @@ function initializeAuth() {
       }
     }
   });
-}
-
-// Start auth initialization when page loads
-window.addEventListener('load', initializeAuth);
-
-// Also try immediately in case load already fired
-if (document.readyState === 'complete') {
-  initializeAuth();
-}
+});
 
 // Logout function
 window.firebaseLogout = async function() {
