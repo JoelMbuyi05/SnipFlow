@@ -16,7 +16,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase immediately
-let db = null;
+let appDb = null;
 let auth = null;
 let firebaseInitialized = false;
 

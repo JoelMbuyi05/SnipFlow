@@ -2,19 +2,32 @@
 // SIMPLE AUTHENTICATION - DIRECT APPROACH
 // ==========================================
 
+let isSigningIn = false;
+
 // Handle Google Sign-In - SIMPLE VERSION
 window.handleGoogleSignIn = async function() {
+  // Prevent multiple clicks
+  if (isSigningIn) {
+    console.log('Already signing in...');
+    return;
+  }
+  
+  isSigningIn = true;
   console.log('🔐 Starting sign-in...');
   
   const auth = window.getAuth();
   
   if (!auth) {
     alert('Please wait and try again');
+    isSigningIn = false;
     return;
   }
   
   try {
     const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
     
     // Sign in with POPUP (simpler than redirect)
     const result = await auth.signInWithPopup(provider);
@@ -32,11 +45,18 @@ window.handleGoogleSignIn = async function() {
     
     localStorage.setItem('snipflow_user', JSON.stringify(userData));
     
+    // Close modal if exists
+    const modal = document.getElementById('authModal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+    
     // FORCE REDIRECT TO DASHBOARD
     console.log('Redirecting to dashboard...');
     window.location.href = 'app.html';
     
   } catch (error) {
+    isSigningIn = false;
     console.error('Sign-in error:', error);
     
     // If popup was blocked, try redirect
@@ -44,8 +64,10 @@ window.handleGoogleSignIn = async function() {
       console.log('Popup blocked, trying redirect...');
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithRedirect(provider);
+    } else if (error.code === 'auth/cancelled-popup-request') {
+      console.log('Popup cancelled, you can try again');
     } else if (error.code !== 'auth/popup-closed-by-user') {
-      alert('Sign-in failed: ' + error.message);
+      alert('Sign-in failed. Please try again.');
     }
   }
 };
@@ -87,10 +109,17 @@ window.addEventListener('load', () => {
 
 // Logout
 window.firebaseLogout = async function() {
+  console.log('Logging out...');
   const auth = window.getAuth();
-  if (auth) {
-    await auth.signOut();
+  
+  try {
+    if (auth) {
+      await auth.signOut();
+    }
+  } catch (error) {
+    console.error('Logout error:', error);
   }
+  
   localStorage.clear();
   window.location.href = 'index.html';
 };
