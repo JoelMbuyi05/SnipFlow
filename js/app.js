@@ -7,11 +7,11 @@ let snippets = [];
 let currentUser = null;
 let currentFilter = 'all';
 let editingSnippetId = null;
-let firestoreDb = null; // Changed from 'db' to avoid conflicts
+let firestoreDb = null;
 
 // Initialize app on page load
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('🚀 Snipflow App Initialized');
+  console.log('Snipflow App Initialized');
   
   // Check if user is logged in
   checkAuth();
@@ -19,9 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Wait for Firebase to be ready
   const checkFirebase = setInterval(() => {
     firestoreDb = window.getDb();
-    if (firestoreDb) {
+    if (firestoreDb && currentUser) {
       clearInterval(checkFirebase);
-      console.log('✅ Firestore ready');
+      console.log('Firestore ready');
       
       // Load snippets from Firestore
       loadSnippetsFromFirestore();
@@ -41,12 +41,14 @@ function checkAuth() {
   
   if (savedUser) {
     currentUser = JSON.parse(savedUser);
-    console.log('✅ User logged in:', currentUser.email);
+    console.log('User logged in:', currentUser.email);
+    console.log('User UID:', currentUser.uid);
     updateUserProfile();
   } else {
     // Redirect to index if not logged in
-    if (window.location.pathname.includes('app.html')) {
-      window.location.href = 'index.html';
+    if (window.location.pathname.includes('dashboard')) {
+      console.log('No user found, redirecting to home');
+      window.location.href = '/';
     }
   }
 }
@@ -105,12 +107,16 @@ function toggleProfileDropdown() {
 }
 
 function logout() {
+  // Show confirmation dialog
+  if (!confirm('Are you sure you want to logout?')) {
+    return;
+  }
+  
   if (typeof window.firebaseLogout === 'function') {
     window.firebaseLogout();
   } else {
     localStorage.removeItem('snipflow_user');
-    localStorage.removeItem('snipflow_snippets');
-    window.location.href = 'index.html';
+    window.location.href = '/';
   }
 }
 
@@ -119,37 +125,72 @@ function logout() {
 // ==========================================
 
 async function loadSnippetsFromFirestore() {
-  if (!firestoreDb || !currentUser) {
-    console.warn('DB or user not ready');
+  if (!currentUser) {
+    console.warn('User not ready');
+    return;
+  }
+  
+  // ALWAYS load from localStorage FIRST (instant)
+  const localKey = `snipflow_snippets_${currentUser.uid}`;
+  const savedLocal = localStorage.getItem(localKey);
+  
+  if (savedLocal) {
+    try {
+      snippets = JSON.parse(savedLocal);
+      console.log(`Loaded ${snippets.length} snippets from localStorage (instant)`);
+      renderSnippets();
+    } catch (error) {
+      console.error('Error parsing localStorage:', error);
+      snippets = [];
+    }
+  }
+  
+  // Then sync with Firestore in background
+  if (!firestoreDb) {
+    console.warn('Firestore not ready, using localStorage only');
     return;
   }
   
   try {
-    console.log('📦 Loading snippets from Firestore...');
+    console.log('Syncing with Firestore...');
     
     const querySnapshot = await firestoreDb.collection('snippets')
       .where('userId', '==', currentUser.uid)
       .orderBy('updatedAt', 'desc')
       .get();
     
-    snippets = [];
+    const firestoreSnippets = [];
     querySnapshot.forEach((doc) => {
-      snippets.push({
+      const data = doc.data();
+      firestoreSnippets.push({
         id: doc.id,
-        ...doc.data()
+        ...data
       });
     });
     
-    console.log(`✅ Loaded ${snippets.length} snippets`);
-    renderSnippets();
+    console.log(`Synced ${firestoreSnippets.length} snippets from Firestore`);
+    
+    // Update with Firestore data (it's the source of truth)
+    if (firestoreSnippets.length > 0) {
+      snippets = firestoreSnippets;
+      saveToLocalStorage();
+      renderSnippets();
+      console.log('Firestore sync complete');
+    } else if (snippets.length > 0) {
+      // localStorage has data but Firestore doesn't - push to Firestore
+      console.log('Pushing localStorage snippets to Firestore...');
+      for (const snippet of snippets) {
+        await saveSnippetToFirestore(snippet);
+      }
+    }
     
   } catch (error) {
-    console.error('Error loading snippets:', error);
+    console.error('Firestore sync failed:', error);
+    console.log('Using localStorage data (offline mode)');
     
-    // Fallback to localStorage if Firestore fails
-    const saved = localStorage.getItem('snipflow_snippets');
-    if (saved) {
-      snippets = JSON.parse(saved);
+    // We already loaded from localStorage, so just continue
+    if (snippets.length === 0 && savedLocal) {
+      snippets = JSON.parse(savedLocal);
       renderSnippets();
     }
   }
@@ -162,9 +203,19 @@ async function saveSnippetToFirestore(snippet) {
     return;
   }
   
+  if (!currentUser) {
+    console.error('No user logged in');
+    return;
+  }
+  
   try {
+    // Always ensure userId is set
+    snippet.userId = currentUser.uid;
+    
     if (snippet.id && snippet.id.startsWith('snip_')) {
       // New snippet - add to Firestore
+      console.log('Adding new snippet to Firestore...');
+      
       const docRef = await firestoreDb.collection('snippets').add({
         title: snippet.title,
         language: snippet.language,
@@ -172,17 +223,27 @@ async function saveSnippetToFirestore(snippet) {
         tags: snippet.tags,
         isPinned: snippet.isPinned,
         isFavorite: snippet.isFavorite,
-        userId: snippet.userId,
+        userId: currentUser.uid,
         createdAt: snippet.createdAt,
         updatedAt: snippet.updatedAt
       });
       
       // Update local snippet with Firestore ID
+      const oldId = snippet.id;
       snippet.id = docRef.id;
-      console.log('✅ Snippet saved to Firestore:', docRef.id);
+      
+      // Update in local array
+      const index = snippets.findIndex(s => s.id === oldId);
+      if (index !== -1) {
+        snippets[index] = snippet;
+      }
+      
+      console.log('Snippet saved to Firestore with ID:', docRef.id);
       
     } else if (snippet.id) {
       // Existing snippet - update in Firestore
+      console.log('Updating snippet in Firestore:', snippet.id);
+      
       await firestoreDb.collection('snippets').doc(snippet.id).update({
         title: snippet.title,
         language: snippet.language,
@@ -193,10 +254,10 @@ async function saveSnippetToFirestore(snippet) {
         updatedAt: snippet.updatedAt
       });
       
-      console.log('✅ Snippet updated in Firestore:', snippet.id);
+      console.log('Snippet updated in Firestore:', snippet.id);
     }
     
-    // Also save to localStorage as backup
+    // Always save to localStorage as backup
     saveToLocalStorage();
     
   } catch (error) {
@@ -213,16 +274,25 @@ async function deleteSnippetFromFirestore(snippetId) {
   }
   
   try {
-    await firestoreDb.collection('snippets').doc(snippetId).delete();
-    console.log('✅ Snippet deleted from Firestore');
+    // Only delete from Firestore if it's not a temporary ID
+    if (!snippetId.startsWith('snip_')) {
+      console.log('Deleting snippet from Firestore:', snippetId);
+      await firestoreDb.collection('snippets').doc(snippetId).delete();
+      console.log('Snippet deleted from Firestore');
+    }
   } catch (error) {
     console.error('Error deleting from Firestore:', error);
   }
 }
 
 function saveToLocalStorage() {
-  localStorage.setItem('snipflow_snippets', JSON.stringify(snippets));
-  console.log('💾 Snippets saved to localStorage');
+  if (currentUser) {
+    const key = `snipflow_snippets_${currentUser.uid}`;
+    localStorage.setItem(key, JSON.stringify(snippets));
+    console.log('Saved', snippets.length, 'snippets to localStorage with key:', key);
+  } else {
+    console.warn('Cannot save to localStorage: no current user');
+  }
 }
 
 // ==========================================
@@ -328,7 +398,8 @@ async function handleSnippetSubmit(e) {
       snippet.updatedAt = Date.now();
       
       await saveSnippetToFirestore(snippet);
-      console.log('✏️ Snippet updated:', title);
+      showToast('Snippet updated!');
+      console.log('Snippet updated:', title);
     }
   } else {
     // Create new snippet
@@ -347,7 +418,8 @@ async function handleSnippetSubmit(e) {
     
     snippets.unshift(newSnippet);
     await saveSnippetToFirestore(newSnippet);
-    console.log('✅ New snippet created:', title);
+    showToast('Snippet created!');
+    console.log('New snippet created:', title);
   }
   
   renderSnippets();
@@ -355,13 +427,14 @@ async function handleSnippetSubmit(e) {
 }
 
 async function deleteSnippet(snippetId) {
-  if (!confirm('Delete this snippet?')) return;
+  if (!confirm('Are you sure you want to delete this snippet?')) return;
   
   snippets = snippets.filter(s => s.id !== snippetId);
   await deleteSnippetFromFirestore(snippetId);
   saveToLocalStorage();
   renderSnippets();
-  console.log('🗑️ Snippet deleted');
+  showToast('Snippet deleted');
+  console.log('Snippet deleted');
 }
 
 async function togglePin(snippetId) {
@@ -371,6 +444,7 @@ async function togglePin(snippetId) {
     snippet.updatedAt = Date.now();
     await saveSnippetToFirestore(snippet);
     renderSnippets();
+    showToast(snippet.isPinned ? 'Snippet pinned' : 'Snippet unpinned');
   }
 }
 
@@ -381,6 +455,7 @@ async function toggleFavorite(snippetId) {
     snippet.updatedAt = Date.now();
     await saveSnippetToFirestore(snippet);
     renderSnippets();
+    showToast(snippet.isFavorite ? 'Added to favorites' : 'Removed from favorites');
   }
 }
 
@@ -390,11 +465,12 @@ function copySnippet(snippetId) {
   
   navigator.clipboard.writeText(snippet.code)
     .then(() => {
-      showToast('Code copied!');
-      console.log('📋 Code copied');
+      showToast('Code copied to clipboard!');
+      console.log('Code copied');
     })
     .catch(err => {
       console.error('Failed to copy:', err);
+      showToast('Failed to copy code', 'error');
     });
 }
 
@@ -402,16 +478,87 @@ function shareSnippet(snippetId) {
   const snippet = snippets.find(s => s.id === snippetId);
   if (!snippet) return;
   
-  const shareLink = `${window.location.origin}/share.html?id=${snippetId}`;
+  // Get the base URL without any paths
+  const baseUrl = window.location.origin;
+  const shareLink = `${baseUrl}/share.html?id=${snippetId}`;
   
   navigator.clipboard.writeText(shareLink)
     .then(() => {
-      console.log('🔗 Share link copied');
+      showToast(shareLink);
+      console.log('Share link copied:', shareLink);
     })
     .catch(err => {
       console.error('Failed to copy link:', err);
+      showToast('Failed to copy share link', 'error');
     });
 }
+
+// ==========================================
+// TOAST NOTIFICATION
+// ==========================================
+
+function showToast(message, type = 'success') {
+  // Remove existing toast if any
+  const existingToast = document.getElementById('toast');
+  if (existingToast) {
+    existingToast.remove();
+  }
+  
+  // Create toast element
+  const toast = document.createElement('div');
+  toast.id = 'toast';
+  toast.className = `fixed bottom-6 right-6 z-50 px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 animate-slide-up ${
+    type === 'error' 
+      ? 'bg-red-500 text-white' 
+      : 'bg-green-500 text-white'
+  }`;
+  
+  const icon = type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle';
+  
+  toast.innerHTML = `
+    <i class="fas ${icon} text-xl"></i>
+    <span class="font-medium">${message}</span>
+  `;
+  
+  document.body.appendChild(toast);
+  
+  // Auto remove after 3 seconds
+  setTimeout(() => {
+    toast.style.animation = 'slide-down 0.3s ease-out';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// Add animation styles
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slide-up {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slide-down {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
+  
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out;
+  }
+`;
+document.head.appendChild(style);
 
 // ==========================================
 // RENDER FUNCTIONS
@@ -637,12 +784,12 @@ function handleFeedbackSubmit(e) {
     to_name: 'Snipflow Team'
   })
   .then(() => {
-    showToast('Feedback sent! Thank you!')
+    showToast('Feedback sent! Thank you!');
     closeFeedbackModal();
   })
   .catch(err => {
     console.error('EmailJS error:', err);
-    alert('Failed to send feedback. Please try again.');
+    showToast('Failed to send feedback. Please try again.', 'error');
   })
   .finally(() => {
     submitBtn.disabled = false;

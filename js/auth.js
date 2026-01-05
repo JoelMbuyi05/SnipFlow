@@ -13,7 +13,7 @@ window.handleGoogleSignIn = async function() {
   }
   
   isSigningIn = true;
-  console.log('🔐 Starting sign-in...');
+  console.log('Starting sign-in...');
   
   const auth = window.getAuth();
   
@@ -39,7 +39,8 @@ window.handleGoogleSignIn = async function() {
     const result = await auth.signInWithPopup(provider);
     const user = result.user;
     
-    console.log('✅ Signed in:', user.email);
+    console.log('Signed in:', user.email);
+    console.log('User UID:', user.uid);
     
     // Save user data
     const userData = {
@@ -50,10 +51,11 @@ window.handleGoogleSignIn = async function() {
     };
     
     localStorage.setItem('snipflow_user', JSON.stringify(userData));
+    console.log('User data saved to localStorage');
     
     // FORCE REDIRECT TO DASHBOARD
     console.log('Redirecting to dashboard...');
-    window.location.href = 'app.html';
+    window.location.href = '/app.html';
     
   } catch (error) {
     isSigningIn = false;
@@ -76,29 +78,53 @@ window.handleGoogleSignIn = async function() {
   }
 };
 
-// Simple auth check on page load
-window.addEventListener('load', () => {
-  console.log('Checking auth...');
+// Handle redirect result (in case popup was blocked)
+window.addEventListener('load', async () => {
+  console.log('Checking auth and redirect result...');
   
-  // If on app.html, check if user exists
-  if (window.location.pathname.includes('app.html')) {
+  const auth = window.getAuth();
+  if (auth) {
+    try {
+      const result = await auth.getRedirectResult();
+      if (result.user) {
+        console.log('Sign-in via redirect successful:', result.user.email);
+        
+        const userData = {
+          uid: result.user.uid,
+          email: result.user.email,
+          name: result.user.displayName,
+          photoURL: result.user.photoURL
+        };
+        
+        localStorage.setItem('snipflow_user', JSON.stringify(userData));
+        window.location.href = '/app.html';
+        return;
+      }
+    } catch (error) {
+      console.error('Redirect result error:', error);
+    }
+  }
+  
+  // If on dashboard, check if user exists
+  if (window.location.pathname.includes('dashboard')) {
     const savedUser = localStorage.getItem('snipflow_user');
     if (!savedUser) {
       console.log('No user, redirecting to home');
-      window.location.href = 'index.html';
+      window.location.href = '/';
       return;
     }
     console.log('User exists, staying on dashboard');
+    console.log('Saved user:', JSON.parse(savedUser));
   }
   
-  // Listen for auth state
-  const auth = window.getAuth();
+  // Listen for auth state changes
   if (auth) {
     auth.onAuthStateChanged((user) => {
       if (user) {
-        console.log('✅ User signed in:', user.email);
+        console.log('User signed in:', user.email);
+        console.log('User UID:', user.uid);
         
-        // Update localStorage
+        // Update localStorage with fresh data
         const userData = {
           uid: user.uid,
           email: user.email,
@@ -106,26 +132,47 @@ window.addEventListener('load', () => {
           photoURL: user.photoURL
         };
         localStorage.setItem('snipflow_user', JSON.stringify(userData));
+        console.log('User data refreshed in localStorage');
+      } else {
+        console.log('No user signed in');
       }
     });
   }
 });
 
-// Logout
+// Logout with confirmation
 window.firebaseLogout = async function() {
+  // Show confirmation dialog
+  if (!confirm('Are you sure you want to logout?')) {
+    return;
+  }
+  
   console.log('Logging out...');
   const auth = window.getAuth();
   
   try {
     if (auth) {
       await auth.signOut();
+      console.log('Firebase sign out successful');
     }
   } catch (error) {
     console.error('Logout error:', error);
   }
   
-  localStorage.clear();
-  window.location.href = 'index.html';
+  // ONLY clear user data, keep snippets for next login
+  localStorage.removeItem('snipflow_user');
+  
+  // NOTE: We keep snippet data so it persists across sessions
+  // If you want to clear snippets too, uncomment below:
+  // const keys = Object.keys(localStorage);
+  // keys.forEach(key => {
+  //   if (key.startsWith('snipflow_snippets_')) {
+  //     localStorage.removeItem(key);
+  //   }
+  // });
+  
+  console.log('User logged out (snippets preserved in localStorage)');
+  window.location.href = '/';
 };
 
-console.log('✅ Auth ready');
+console.log('Auth ready');

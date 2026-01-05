@@ -24,7 +24,7 @@ function initFirebase() {
   if (firebaseInitialized) return;
   
   if (typeof firebase === 'undefined') {
-    console.error('❌ Firebase SDK not loaded yet');
+    console.error('Firebase SDK not loaded yet');
     setTimeout(initFirebase, 100);
     return;
   }
@@ -33,9 +33,9 @@ function initFirebase() {
     // Check if already initialized
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
-      console.log('✅ Firebase initialized successfully');
+      console.log('Firebase initialized successfully');
     } else {
-      console.log('✅ Firebase already initialized');
+      console.log('Firebase already initialized');
     }
     
     // Initialize services
@@ -44,10 +44,10 @@ function initFirebase() {
     
     firebaseInitialized = true;
     
-    console.log('✅ Auth and Firestore ready');
+    console.log('Auth and Firestore ready');
     
   } catch (error) {
-    console.error('❌ Firebase initialization error:', error);
+    console.error('Firebase initialization error:', error);
   }
 }
 
