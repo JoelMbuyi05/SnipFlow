@@ -7,7 +7,7 @@ let snippets = [];
 let currentUser = null;
 let currentFilter = 'all';
 let editingSnippetId = null;
-let appDb = null;
+let firestoreDb = null; // Changed from 'db' to avoid conflicts
 
 // Initialize app on page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -18,8 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Wait for Firebase to be ready
   const checkFirebase = setInterval(() => {
-    appDb = window.getDb();
-    if (appDb) {
+    firestoreDb = window.getDb();
+    if (firestoreDb) {
       clearInterval(checkFirebase);
       console.log('✅ Firestore ready');
       
@@ -108,7 +108,8 @@ function logout() {
   if (typeof window.firebaseLogout === 'function') {
     window.firebaseLogout();
   } else {
-    localStorage.clear();
+    localStorage.removeItem('snipflow_user');
+    localStorage.removeItem('snipflow_snippets');
     window.location.href = 'index.html';
   }
 }
@@ -118,7 +119,7 @@ function logout() {
 // ==========================================
 
 async function loadSnippetsFromFirestore() {
-  if (!appDb || !currentUser) {
+  if (!firestoreDb || !currentUser) {
     console.warn('DB or user not ready');
     return;
   }
@@ -126,7 +127,7 @@ async function loadSnippetsFromFirestore() {
   try {
     console.log('📦 Loading snippets from Firestore...');
     
-    const querySnapshot = await appDb.collection('snippets')
+    const querySnapshot = await firestoreDb.collection('snippets')
       .where('userId', '==', currentUser.uid)
       .orderBy('updatedAt', 'desc')
       .get();
@@ -155,7 +156,7 @@ async function loadSnippetsFromFirestore() {
 }
 
 async function saveSnippetToFirestore(snippet) {
-  if (!appDb) {
+  if (!firestoreDb) {
     console.warn('DB not ready, saving to localStorage only');
     saveToLocalStorage();
     return;
@@ -164,7 +165,7 @@ async function saveSnippetToFirestore(snippet) {
   try {
     if (snippet.id && snippet.id.startsWith('snip_')) {
       // New snippet - add to Firestore
-      const docRef = await appDb.collection('snippets').add({
+      const docRef = await firestoreDb.collection('snippets').add({
         title: snippet.title,
         language: snippet.language,
         code: snippet.code,
@@ -182,7 +183,7 @@ async function saveSnippetToFirestore(snippet) {
       
     } else if (snippet.id) {
       // Existing snippet - update in Firestore
-      await appDb.collection('snippets').doc(snippet.id).update({
+      await firestoreDb.collection('snippets').doc(snippet.id).update({
         title: snippet.title,
         language: snippet.language,
         code: snippet.code,
@@ -206,13 +207,13 @@ async function saveSnippetToFirestore(snippet) {
 }
 
 async function deleteSnippetFromFirestore(snippetId) {
-  if (!appDb) {
+  if (!firestoreDb) {
     console.warn('DB not ready');
     return;
   }
   
   try {
-    await appDb.collection('snippets').doc(snippetId).delete();
+    await firestoreDb.collection('snippets').doc(snippetId).delete();
     console.log('✅ Snippet deleted from Firestore');
   } catch (error) {
     console.error('Error deleting from Firestore:', error);
@@ -389,6 +390,7 @@ function copySnippet(snippetId) {
   
   navigator.clipboard.writeText(snippet.code)
     .then(() => {
+      showToast('Code copied!');
       console.log('📋 Code copied');
     })
     .catch(err => {
@@ -635,6 +637,7 @@ function handleFeedbackSubmit(e) {
     to_name: 'Snipflow Team'
   })
   .then(() => {
+    showToast('Feedback sent! Thank you!')
     closeFeedbackModal();
   })
   .catch(err => {

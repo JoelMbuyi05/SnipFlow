@@ -4,7 +4,7 @@
 
 let isSigningIn = false;
 
-// Handle Google Sign-In - SIMPLE VERSION
+// Handle Google Sign-In - DIRECT TO GOOGLE
 window.handleGoogleSignIn = async function() {
   // Prevent multiple clicks
   if (isSigningIn) {
@@ -26,10 +26,16 @@ window.handleGoogleSignIn = async function() {
   try {
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({
-      prompt: 'select_account'
+      prompt: 'select_account' // Always show account chooser
     });
     
-    // Sign in with POPUP (simpler than redirect)
+    // Close modal immediately and go straight to Google
+    const modal = document.getElementById('authModal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+    
+    // Sign in with POPUP - goes directly to Google account chooser
     const result = await auth.signInWithPopup(provider);
     const user = result.user;
     
@@ -44,12 +50,6 @@ window.handleGoogleSignIn = async function() {
     };
     
     localStorage.setItem('snipflow_user', JSON.stringify(userData));
-    
-    // Close modal if exists
-    const modal = document.getElementById('authModal');
-    if (modal) {
-      modal.classList.add('hidden');
-    }
     
     // FORCE REDIRECT TO DASHBOARD
     console.log('Redirecting to dashboard...');
@@ -67,7 +67,11 @@ window.handleGoogleSignIn = async function() {
     } else if (error.code === 'auth/cancelled-popup-request') {
       console.log('Popup cancelled, you can try again');
     } else if (error.code !== 'auth/popup-closed-by-user') {
-      alert('Sign-in failed. Please try again.');
+      // Show modal again if sign-in failed
+      const modal = document.getElementById('authModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+      }
     }
   }
 };
