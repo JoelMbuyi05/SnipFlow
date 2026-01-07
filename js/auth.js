@@ -55,7 +55,7 @@ window.handleGoogleSignIn = async function() {
     
     // REDIRECT TO DASHBOARD
     console.log('Redirecting to dashboard...');
-    window.location.href = '/app.html';
+    window.location.href = '/dashboard';
     
   } catch (error) {
     isSigningIn = false;
@@ -97,7 +97,7 @@ window.addEventListener('load', async () => {
         };
         
         localStorage.setItem('snipflow_user', JSON.stringify(userData));
-        window.location.href = '/app.html';
+        window.location.href = '/dashboard';
         return;
       }
     } catch (error) {

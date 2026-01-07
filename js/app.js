@@ -46,7 +46,7 @@ function checkAuth() {
     updateUserProfile();
   } else {
     // Redirect to index if not logged in
-    if (window.location.pathname.includes('dashboard')) {
+    if (window.location.pathname.includes('dashboard') || window.location.pathname.includes('app.html')) {
       console.log('No user found, redirecting to home');
       window.location.href = '/';
     }
