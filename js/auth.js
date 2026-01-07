@@ -1,10 +1,10 @@
 // ==========================================
-// SIMPLE AUTHENTICATION - DIRECT APPROACH
+// SIMPLE AUTHENTICATION 
 // ==========================================
 
 let isSigningIn = false;
 
-// Handle Google Sign-In - DIRECT TO GOOGLE
+// Handle Google Sign-In
 window.handleGoogleSignIn = async function() {
   // Prevent multiple clicks
   if (isSigningIn) {
@@ -53,7 +53,7 @@ window.handleGoogleSignIn = async function() {
     localStorage.setItem('snipflow_user', JSON.stringify(userData));
     console.log('User data saved to localStorage');
     
-    // FORCE REDIRECT TO DASHBOARD
+    // REDIRECT TO DASHBOARD
     console.log('Redirecting to dashboard...');
     window.location.href = '/app.html';
     
@@ -161,15 +161,6 @@ window.firebaseLogout = async function() {
   
   // ONLY clear user data, keep snippets for next login
   localStorage.removeItem('snipflow_user');
-  
-  // NOTE: We keep snippet data so it persists across sessions
-  // If you want to clear snippets too, uncomment below:
-  // const keys = Object.keys(localStorage);
-  // keys.forEach(key => {
-  //   if (key.startsWith('snipflow_snippets_')) {
-  //     localStorage.removeItem(key);
-  //   }
-  // });
   
   console.log('User logged out (snippets preserved in localStorage)');
   window.location.href = '/';

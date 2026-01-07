@@ -170,14 +170,13 @@ async function loadSnippetsFromFirestore() {
     
     console.log(`Synced ${firestoreSnippets.length} snippets from Firestore`);
     
-    // Update with Firestore data (it's the source of truth)
+    // Update with Firestore data
     if (firestoreSnippets.length > 0) {
       snippets = firestoreSnippets;
       saveToLocalStorage();
       renderSnippets();
       console.log('Firestore sync complete');
     } else if (snippets.length > 0) {
-      // localStorage has data but Firestore doesn't - push to Firestore
       console.log('Pushing localStorage snippets to Firestore...');
       for (const snippet of snippets) {
         await saveSnippetToFirestore(snippet);
@@ -187,8 +186,6 @@ async function loadSnippetsFromFirestore() {
   } catch (error) {
     console.error('Firestore sync failed:', error);
     console.log('Using localStorage data (offline mode)');
-    
-    // We already loaded from localStorage, so just continue
     if (snippets.length === 0 && savedLocal) {
       snippets = JSON.parse(savedLocal);
       renderSnippets();
