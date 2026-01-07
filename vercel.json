@@ -3,6 +3,12 @@
     {
       "source": "/dashboard",
       "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "destination": "/index.html"
     }
-  ]
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false
 }
