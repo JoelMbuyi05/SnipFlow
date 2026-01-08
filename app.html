@@ -19,42 +19,42 @@
   </head>
   <body class="bg-slate-50 dark:bg-slate-900 h-screen overflow-hidden">
 
-    <!-- Top Navbar -->
-    <nav class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4 sticky top-0 z-40">
-      <div class="flex items-center justify-between">
+    <nav class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 md:px-6 py-4 sticky top-0 z-40">
+      <div class="flex items-center gap-3">
+        <!-- Sidebar Hamburger (Mobile) -->
+        <button id="sidebarToggle" aria-label="Sidebar Hamburger" class="md:hidden w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center">
+          <i class="fas fa-bars text-slate-700 dark:text-slate-200"></i>
+        </button>
         <!-- Logo -->
         <a href="/" class="flex items-center gap-3">
           <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center text-white">
             <i class="fas fa-code text-xl"></i>
           </div>
-          <span class="text-2xl font-bold text-blue-900 dark:text-blue-100">Snipflow</span>
+          <span class="text-2xl font-bold text-blue-900 dark:text-blue-100 hidden sm:inline">
+            Snipflow
+          </span>
         </a>
-
-        <!-- Search Bar -->
-        <div class="flex-1 max-w-xl mx-8">
+        <!-- Search -->
+        <div class="flex-1 max-w-xl mx-6 hidden md:block">
           <div class="relative">
             <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input 
-              type="text" 
+            <input
+              type="text"
               id="searchInput"
-              placeholder="Search snippets by title, code, or tags..." 
-              class="w-full pl-12 pr-4 py-3 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-800 transition"
+              placeholder="Search snippets..."
+              class="w-full pl-12 pr-4 py-3 bg-slate-100 dark:bg-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500"
             >
           </div>
         </div>
-
         <!-- Actions -->
-        <div class="flex items-center gap-3">
-          <button id="createBtn" class="bg-gradient-to-r from-blue-500 to-blue-700 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-blue-500/30 transition flex items-center gap-2">
-            <i class="fas fa-plus"></i>
-            Add Snippet
+        <div class="ml-auto flex items-center gap-3">
+          <button id="createBtn" class="hidden sm:flex bg-gradient-to-r from-blue-500 to-blue-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2">
+            <i class="fas fa-plus"></i> Add Snippet
           </button>
-          <!-- Dark Mode Toggle -->
-          <button type="button" id="themeToggle" aria-label="Toggle Button" class="w-10 h-10 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg flex items-center justify-center transition">
+          <button id="themeToggle" aria-label="Theme Toggle" class="w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center">
             <i class="fas fa-moon text-slate-600 dark:text-yellow-400"></i>
           </button>
-          <!-- User Profile Button -->
-          <div id="userProfileBtn" class="w-10 h-10 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg flex items-center justify-center transition cursor-pointer">
+          <div id="userProfileBtn" class="w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center cursor-pointer">
             <i class="fas fa-user text-slate-600 dark:text-slate-300"></i>
           </div>
         </div>
@@ -62,10 +62,11 @@
     </nav>
 
     <!-- Main Layout -->
-    <div class="flex h-[calc(100vh-73px)]">
+    <div class="flex min-h-screen">
       
       <!-- Sidebar -->
-      <aside class="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-6 overflow-y-auto">
+      <!--<aside class="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-6 overflow-y-auto">-->
+      <aside class="fixed md:static inset-y-0 left-0 w-64 bg-white dark:bg-slate-800 transform -translate-x-full md:translate-x-0 transition-transform z-50">
         
         <!-- Quick Stats -->
         <div class="mb-6 p-4 bg-gradient-to-br from-blue-50 dark:from-blue-900 to-blue-100 dark:to-blue-800 rounded-lg border border-blue-200 dark:border-blue-700">
@@ -120,7 +121,7 @@
         </div>
 
         <!-- Snippet Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden" id="snippetsGrid"></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6" id="snippetsGrid"></div>
 
       </main>
 
@@ -328,6 +329,14 @@
           });
         }
       })();
+
+      const sidebarToggle = document.getElementById('sidebarToggle');
+      const sidebar = document.getElementById('sidebar');
+
+      sidebarToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('-translate-x-full');
+     });
+     
     </script>
 
   </body>
