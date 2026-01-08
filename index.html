@@ -406,7 +406,7 @@
 
     // Play when clicking button
     playBtn.addEventListener("click", (e) => {
-      e.stopPropagation(); // prevent wrapper click
+      e.stopPropagation();
       video.play();
       playBtn.classList.add("opacity-0", "pointer-events-none");
     });
@@ -418,7 +418,7 @@
       }
     });
 
-    // Theme Toggle
+    // Theme Toggle Desktop
     (function() {
       const html = document.documentElement;
       const savedTheme = localStorage.getItem('theme');
@@ -428,28 +428,44 @@
         html.classList.remove('dark');
       }
       
+      const updateIcon = (toggle) => {
+        const icon = toggle.querySelector('i');
+        const isDark = html.classList.contains('dark');
+        if (isDark) {
+          icon.classList.remove('fa-moon');
+          icon.classList.add('fa-sun');
+        } else {
+          icon.classList.remove('fa-sun');
+          icon.classList.add('fa-moon');
+        }
+      };
+      
       const themeToggle = document.getElementById('themeToggle');
+      const themeToggleMobile = document.getElementById('themeToggleMobile');
+      
       if (themeToggle) {
-        const updateIcon = () => {
-          const icon = themeToggle.querySelector('i');
-          const isDark = html.classList.contains('dark');
-          if (isDark) {
-            icon.classList.remove('fa-moon');
-            icon.classList.add('fa-sun');
-          } else {
-            icon.classList.remove('fa-sun');
-            icon.classList.add('fa-moon');
-          }
-        };
-        
-        updateIcon();
+        updateIcon(themeToggle);
         themeToggle.addEventListener('click', function(e) {
           e.preventDefault();
           e.stopPropagation();
           html.classList.toggle('dark');
           const isDark = html.classList.contains('dark');
           localStorage.setItem('theme', isDark ? 'dark' : 'light');
-          updateIcon();
+          updateIcon(themeToggle);
+          if (themeToggleMobile) updateIcon(themeToggleMobile);
+        });
+      }
+      
+      if (themeToggleMobile) {
+        updateIcon(themeToggleMobile);
+        themeToggleMobile.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          html.classList.toggle('dark');
+          const isDark = html.classList.contains('dark');
+          localStorage.setItem('theme', isDark ? 'dark' : 'light');
+          updateIcon(themeToggleMobile);
+          if (themeToggle) updateIcon(themeToggle);
         });
       }
     })();
@@ -475,7 +491,7 @@
     mobileMenuBtn.addEventListener('click', () => {
     mobileMenu.classList.toggle('hidden');
     });
-    
+
   </script>
 
 </body>
