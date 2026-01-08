@@ -51,15 +51,10 @@ window.handleGoogleSignIn = async function() {
     
     localStorage.setItem('snipflow_user', JSON.stringify(userData));
     console.log('User data saved to localStorage');
-    
-    // Show loading screen with smooth transition
-    showLoadingScreen();
-    
-    // Wait a bit for smooth transition, then redirect
-    setTimeout(() => {
-      console.log('Redirecting to dashboard...');
-      window.location.href = '/dashboard';
-    }, 800);
+
+    // REDIRECT TO DASHBOARD
+    console.log('Redirecting to dashboard...');
+    window.location.href = '/dashboard';
     
   } catch (error) {
     isSigningIn = false;
