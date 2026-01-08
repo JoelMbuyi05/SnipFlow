@@ -108,18 +108,15 @@ function toggleProfileDropdown() {
 
 function logout() {
   // Show confirmation dialog
-  if (!confirm('Are you sure you want to logout?')) {
-    return;
-  }
-  
   if (typeof window.firebaseLogout === 'function') {
     window.firebaseLogout();
   } else {
+    if (confirm('Are you sure you want to logout?')){
     localStorage.removeItem('snipflow_user');
     window.location.href = '/';
+    }
   }
 }
-
 // ==========================================
 // FIRESTORE FUNCTIONS
 // ==========================================

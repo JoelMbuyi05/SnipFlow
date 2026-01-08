@@ -1,5 +1,5 @@
 // ==========================================
-// SIMPLE AUTHENTICATION 
+// AUTHENTICATION 
 // ==========================================
 
 let isSigningIn = false;
@@ -40,7 +40,6 @@ window.handleGoogleSignIn = async function() {
     const user = result.user;
     
     console.log('Signed in:', user.email);
-    console.log('User UID:', user.uid);
     
     // Save user data
     const userData = {
@@ -53,9 +52,14 @@ window.handleGoogleSignIn = async function() {
     localStorage.setItem('snipflow_user', JSON.stringify(userData));
     console.log('User data saved to localStorage');
     
-    // REDIRECT TO DASHBOARD
-    console.log('Redirecting to dashboard...');
-    window.location.href = '/dashboard';
+    // Show loading screen with smooth transition
+    showLoadingScreen();
+    
+    // Wait a bit for smooth transition, then redirect
+    setTimeout(() => {
+      console.log('Redirecting to dashboard...');
+      window.location.href = '/dashboard';
+    }, 800);
     
   } catch (error) {
     isSigningIn = false;
@@ -97,7 +101,13 @@ window.addEventListener('load', async () => {
         };
         
         localStorage.setItem('snipflow_user', JSON.stringify(userData));
-        window.location.href = '/dashboard';
+        
+        // Show loading screen
+        showLoadingScreen();
+        
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 800);
         return;
       }
     } catch (error) {
@@ -165,5 +175,26 @@ window.firebaseLogout = async function() {
   console.log('User logged out (snippets preserved in localStorage)');
   window.location.href = '/';
 };
+
+// Show loading screen during sign-in
+function showLoadingScreen() {
+  const loader = document.createElement('div');
+  loader.id = 'authLoader';
+  loader.className = 'fixed inset-0 bg-slate-900/95 backdrop-blur-sm z-50 flex items-center justify-center';
+  loader.innerHTML = `
+    <div class="text-center">
+      <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+        <i class="fas fa-code text-white text-3xl"></i>
+      </div>
+      <p class="text-white text-lg font-semibold">Signing you in...</p>
+      <div class="mt-4 flex gap-2 justify-center">
+        <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+        <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+        <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(loader);
+}
 
 console.log('Auth ready');
