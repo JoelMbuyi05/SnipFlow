@@ -23,7 +23,6 @@ It’s designed for developers who learn by building and want a clean, reliable 
 
 * Google authentication with Firebase
 * Create, edit, delete code snippets
-* Syntax highlighting for multiple languages
 * Search snippets by title, language, tags, or code
 * Pin and favorite important snippets
 * One-click copy to clipboard
@@ -36,7 +35,7 @@ The project started with defining the core problem: developers constantly lose u
 
 After building the HTML structure, I styled the application using Tailwind CSS to achieve a modern and responsive interface. Once the UI was stable, I implemented Firebase Authentication to allow users to securely sign in using Google.
 
-Next, I integrated Firestore to store snippets in the cloud and retrieve them in real time. JavaScript logic was then added for creating, editing, deleting, pinning, and searching snippets. Syntax highlighting was implemented using Highlight.js to improve code readability.
+Next, I integrated Firestore to store snippets in the cloud and retrieve them in real time. JavaScript logic was then added for creating, editing, deleting, pinning, and searching snippets.
 
 Finally, I added quality-of-life features such as dark mode, clipboard copy, offline support, and UI feedback. The app was tested, cleaned up, and deployed.
 
