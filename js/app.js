@@ -8,6 +8,7 @@ let currentUser = null;
 let currentFilter = 'all';
 let editingSnippetId = null;
 let firestoreDb = null;
+let currentScreenshot = null;
 
 // Initialize app on page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -118,16 +119,16 @@ function logout() {
   }
 }
 
-// =========================================
+// ==========================================
 // SCREENSHOT FUNCTIONS
-// =========================================
+// ==========================================
 
 function handleScreenshotUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
 
   if (file.size > 5 * 1024 * 1024) {
-    alert('File must be less than 5MB');
+    alert('File size must be less than 5MB');
     return;
   }
 
@@ -143,8 +144,9 @@ function handleScreenshotUpload(event) {
 function clearScreenshot() {
   currentScreenshot = null;
   document.getElementById('snippetScreenshot').value = '';
-  document.getElementById('screenshotPreview').classList.add('hidden')
+  document.getElementById('screenshotPreview').classList.add('hidden');
 }
+
 // ==========================================
 // FIRESTORE FUNCTIONS
 // ==========================================
@@ -243,6 +245,7 @@ async function saveSnippetToFirestore(snippet) {
         language: snippet.language,
         code: snippet.code,
         tags: snippet.tags,
+        screenshot: snippet.screenshot || null,
         isPinned: snippet.isPinned,
         isFavorite: snippet.isFavorite,
         userId: currentUser.uid,
@@ -271,6 +274,7 @@ async function saveSnippetToFirestore(snippet) {
         language: snippet.language,
         code: snippet.code,
         tags: snippet.tags,
+        screenshot: snippet.screenshot || null,
         isPinned: snippet.isPinned,
         isFavorite: snippet.isFavorite,
         updatedAt: snippet.updatedAt
@@ -358,14 +362,17 @@ function setupEventListeners() {
 
 function openCreateModal() {
   editingSnippetId = null;
+  currentScreenshot = null;
   document.getElementById('createModal').classList.remove('hidden');
   document.querySelector('#createModal h2').textContent = 'Create New Snippet';
   document.getElementById('snippetForm').reset();
+  document.getElementById('screenshotPreview').classList.add('hidden');
 }
 
 function closeCreateModal() {
   document.getElementById('createModal').classList.add('hidden');
   editingSnippetId = null;
+  currentScreenshot = null;
 }
 
 function openEditModal(snippetId) {
@@ -373,6 +380,7 @@ function openEditModal(snippetId) {
   if (!snippet) return;
   
   editingSnippetId = snippetId;
+  currentScreenshot = snippet.screenshot || null;
   document.getElementById('createModal').classList.remove('hidden');
   document.querySelector('#createModal h2').textContent = 'Edit Snippet';
   
@@ -380,6 +388,14 @@ function openEditModal(snippetId) {
   document.getElementById('snippetLanguage').value = snippet.language;
   document.getElementById('snippetCode').value = snippet.code;
   document.getElementById('snippetTags').value = snippet.tags.join(', ');
+  
+  // Show screenshot if exists
+  if (snippet.screenshot) {
+    document.getElementById('previewImage').src = snippet.screenshot;
+    document.getElementById('screenshotPreview').classList.remove('hidden');
+  } else {
+    document.getElementById('screenshotPreview').classList.add('hidden');
+  }
 }
 
 function openFeedbackModal() {
@@ -417,6 +433,7 @@ async function handleSnippetSubmit(e) {
       snippet.language = language;
       snippet.code = code;
       snippet.tags = tags;
+      snippet.screenshot = currentScreenshot;
       snippet.updatedAt = Date.now();
       
       await saveSnippetToFirestore(snippet);
@@ -431,6 +448,7 @@ async function handleSnippetSubmit(e) {
       language,
       code,
       tags,
+      screenshot: currentScreenshot,
       isPinned: false,
       isFavorite: false,
       createdAt: Date.now(),
@@ -633,14 +651,14 @@ function renderSnippets() {
 function createSnippetCard(snippet) {
   const createdDate = new Date(snippet.createdAt).toLocaleDateString();
   const tagsHTML = snippet.tags.map(tag => 
-    `<span class="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-1 rounded">${tag}</span>`
+    `<span class="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded border border-blue-200 dark:border-blue-800">${tag}</span>`
   ).join('');
   
   return `
-    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-lg transition group">
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden hover:shadow-lg transition group">
       
       <!-- Card Header -->
-      <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-start justify-between">
+      <div class="p-4 border-b border-slate-300 dark:border-slate-700 flex items-start justify-between">
         <div class="flex-1">
           <div class="flex items-center gap-2 mb-1">
             ${snippet.isPinned ? '<i class="fas fa-thumbtack text-blue-500 text-sm"></i>' : ''}
@@ -670,8 +688,15 @@ function createSnippetCard(snippet) {
         <div class="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-slate-900 dark:from-slate-950 to-transparent pointer-events-none"></div>
       </div>
       
+      ${snippet.screenshot ? `
+      <!-- Screenshot -->
+      <div class="p-4 border-t border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+        <img src="${snippet.screenshot}" alt="Snippet screenshot" class="w-full rounded-lg border border-slate-300 dark:border-slate-600" />
+      </div>
+      ` : ''}
+      
       <!-- Card Footer -->
-      <div class="p-4 flex items-center justify-between">
+      <div class="p-4 flex items-center justify-between flex-wrap gap-3">
         <div class="flex gap-1 flex-wrap">
           ${tagsHTML}
         </div>
@@ -840,3 +865,5 @@ window.handleFilterClick = handleFilterClick;
 window.closeCreateModal = closeCreateModal;
 window.closeFeedbackModal = closeFeedbackModal;
 window.logout = logout;
+window.handleScreenshotUpload = handleScreenshotUpload;
+window.clearScreenshot = clearScreenshot;

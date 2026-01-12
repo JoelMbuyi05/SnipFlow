@@ -42,19 +42,19 @@
               type="text"
               id="searchInput"
               placeholder="Search snippets..."
-              class="w-full pl-12 pr-4 py-3 bg-slate-100 dark:bg-slate-700 rounded-lg border-2 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full pl-12 pr-4 py-3 bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
           </div>
         </div>
         <!-- Actions -->
         <div class="ml-auto flex items-center gap-3">
-          <button id="createBtn" class="hidden sm:flex bg-gradient-to-r from-blue-500 to-blue-700 text-white px-6 py-3 rounded-lg font-semibold items-center gap-2 border-2 border-blue-700">
+          <button id="createBtn" class="hidden sm:flex bg-gradient-to-r from-blue-500 to-blue-700 text-white px-6 py-3 rounded-lg font-semibold items-center gap-2">
             <i class="fas fa-plus"></i> Add Snippet
           </button>
-          <button id="themeToggle" aria-label="Theme Toggle" class="w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center border-2 border-slate-300 dark:border-slate-600">
+          <button id="themeToggle" aria-label="Theme Toggle" class="w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center">
             <i class="fas fa-moon text-slate-600 dark:text-yellow-400"></i>
           </button>
-          <div id="userProfileBtn" class="w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center cursor-pointer border-2 border-slate-300 dark:border-slate-600">
+          <div id="userProfileBtn" class="w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center cursor-pointer">
             <i class="fas fa-user text-slate-600 dark:text-slate-300"></i>
           </div>
         </div>
@@ -68,7 +68,7 @@
       <aside id="sidebar" class="fixed md:static inset-y-0 left-0 w-64 bg-white dark:bg-slate-800 border-r-2 border-slate-300 dark:border-slate-700 p-6 overflow-y-auto transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-50 mt-[73px] md:mt-0">
         
         <!-- Quick Stats -->
-        <div class="mb-6 p-4 bg-gradient-to-br from-blue-50 dark:from-blue-900 to-blue-100 dark:to-blue-800 rounded-lg border-2 border-blue-300 dark:border-blue-700">
+        <div class="mb-6 p-4 bg-gradient-to-br from-blue-50 dark:from-blue-900 to-blue-100 dark:to-blue-800 rounded-lg border border-blue-200 dark:border-blue-700">
           <div class="text-sm text-slate-600 dark:text-slate-300 mb-1">Total Snippets</div>
           <div class="text-3xl font-bold text-blue-900 dark:text-blue-100" id="snippetCount">0</div>
         </div>
@@ -77,16 +77,16 @@
         <div class="mb-6">
           <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Quick Filters</h3>
           <div class="space-y-1">
-            <button onclick="handleFilterClick(event)" class="filter-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-100 font-medium border-2 border-blue-200 dark:border-blue-700">
+            <button onclick="handleFilterClick(event)" class="filter-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-100 font-medium">
               <i class="fas fa-th-large w-4"></i>
               <span>All Snippets</span>
               <span class="ml-auto text-xs bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-100 px-2 py-0.5 rounded-full" id="allCount">0</span>
             </button>
-            <button onclick="handleFilterClick(event)" class="filter-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium transition border-2 border-transparent hover:border-slate-300 dark:hover:border-slate-600">
+            <button onclick="handleFilterClick(event)" class="filter-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium transition">
               <i class="fas fa-star w-4 text-yellow-500"></i>
               <span>Favorites</span>
             </button>
-            <button onclick="handleFilterClick(event)" class="filter-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium transition border-2 border-transparent hover:border-slate-300 dark:hover:border-slate-600">
+            <button onclick="handleFilterClick(event)" class="filter-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium transition">
               <i class="fas fa-clock w-4 text-slate-400"></i>
               <span>Recent</span>
             </button>
@@ -94,7 +94,7 @@
         </div>
 
         <!-- Send Feedback -->
-        <button id="feedbackBtn" class="w-full bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-100 rounded-lg px-4 py-4 text-left transition mt-20 border-2 border-blue-300 dark:border-blue-700">
+        <button id="feedbackBtn" class="w-full bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-100 rounded-lg px-4 py-4 text-left transition mt-20">
           <div class="font-semibold text-sm mb-1">Send Feedback</div>
           <div class="text-xs text-blue-600 dark:text-blue-300">Help us improve Snipflow with your suggestions!</div>
         </button>
@@ -131,10 +131,10 @@
 
     <!-- Create Snippet Modal-->
     <div id="createModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border-2 border-slate-300 dark:border-slate-700">
+      <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700">
         
         <!-- Modal Header -->
-        <div class="p-6 border-b-2 border-slate-300 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-800">
+        <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-800">
           <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Create New Snippet</h2>
           <button onclick="closeCreateModal()" aria-label="Modal Header" class="w-8 h-8 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg flex items-center justify-center transition">
             <i class="fas fa-times text-slate-400 dark:text-slate-500"></i>
@@ -149,14 +149,14 @@
               type="text" 
               id="snippetTitle"
               placeholder="e.g., React useState Hook"
-              class="w-full px-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               required
             >
           </div>
 
           <div class="mb-4">
             <label for="snippetLanguage" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Language *</label>
-            <select id="snippetLanguage" class="w-full px-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required>
+            <select id="snippetLanguage" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required>
               <option value="">Select...</option>
               <option value="javascript">JavaScript</option>
               <option value="python">Python</option>
@@ -179,7 +179,7 @@
               id="snippetCode"
               rows="10"
               placeholder="Paste code..."
-              class="w-full px-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition font-mono text-sm resize-none"
+              class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition font-mono text-sm resize-none"
               required
             ></textarea>
           </div>
@@ -190,7 +190,7 @@
               type="text" 
               id="snippetTags"
               placeholder="e.g., react, hooks"
-              class="w-full px-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             >
           </div>
 
@@ -210,7 +210,7 @@
                 <p class="text-xs text-slate-500 dark:text-slate-500 mt-1">PNG, JPG, GIF up to 5MB</p>
               </label>
               <div id="screenshotPreview" class="mt-4 hidden">
-                <img id="previewImage" src="" alt="Preview" class="max-w-full max-h-48 mx-auto rounded-lg border-2 border-slate-300 dark:border-slate-600">
+                <img id="previewImage" src="" alt="Preview" class="max-w-full max-h-48 mx-auto rounded-lg border border-slate-300 dark:border-slate-600">
                 <button type="button" onclick="clearScreenshot()" class="mt-2 text-sm text-red-600 hover:text-red-700 dark:text-red-400">Remove</button>
               </div>
             </div>
@@ -220,13 +220,13 @@
             <button 
               type="button"
               onclick="closeCreateModal()"
-              class="flex-1 px-6 py-3 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition"
+              class="flex-1 px-6 py-3 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition"
             >
               Cancel
             </button>
             <button 
               type="submit"
-              class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition border-2 border-blue-700"
+              class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition"
             >
               <i class="fas fa-save"></i> Save
             </button>
@@ -238,12 +238,12 @@
 
     <!-- Feedback Modal-->
     <div id="feedbackModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg border-2 border-slate-300 dark:border-slate-700">
+      <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-700">
         
         <!-- Modal Header -->
-        <div class="p-6 border-b-2 border-slate-300 dark:border-slate-700 flex items-center justify-between">
+        <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center border-2 border-blue-300 dark:border-blue-700">
+            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
               <i class="fas fa-comment text-blue-600 dark:text-blue-400 text-xl"></i>
             </div>
             <div>
@@ -265,7 +265,7 @@
             id="feedbackText"
             rows="6"
             placeholder="Tell us what you think about Snipflow..."
-            class="w-full px-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
+            class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
             required
           ></textarea>
           
@@ -277,14 +277,14 @@
             <button 
               type="button"
               onclick="closeFeedbackModal()"
-              class="flex-1 px-6 py-3 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition"
+              class="flex-1 px-6 py-3 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition"
             >
               Cancel
             </button>
             <button 
               type="submit"
               id="submitBtn"
-              class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition border-2 border-blue-700"
+              class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition"
             >
               <i class="fas fa-paper-plane"></i>
               Send Feedback
