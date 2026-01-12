@@ -42,7 +42,7 @@
     <div class="container mx-auto px-6 py-4">
       <div class="flex items-center justify-between">
         <!-- Logo -->
-        <a href="index.html" class="flex items-center gap-3">
+        <a href="#" id="homeLogo" class="flex items-center gap-3">
           <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center text-white">
             <i class="fas fa-code text-xl"></i>
           </div>
@@ -400,6 +400,21 @@
   <script src="js/auth.js"></script>
 
   <script>
+
+    // Smart logo navigation
+    document.getElementById('homeLogo').addEventListener('click', (e) => {
+      e.preventDefault();
+      const user = localStorage.getItem('snipflow_user');
+      
+      if (user) {
+        // User is signed in, go to dashboard
+        window.location.href = '/dashboard';
+      } else {
+        // User not signed in, stay on homepage (scroll to top)
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });    
+
     const video = document.getElementById("demoVideo");
     const playBtn = document.getElementById("videoPlayBtn");
     const wrapper = document.getElementById("videoWrapper");
