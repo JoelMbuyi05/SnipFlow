@@ -117,6 +117,34 @@ function logout() {
     }
   }
 }
+
+// =========================================
+// SCREENSHOT FUNCTIONS
+// =========================================
+
+function handleScreenshotUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert('File must be less than 5MB');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    currentScreenshot = e.target.result;
+    document.getElementById('previewImage').src = e.target.result;
+    document.getElementById('screenshotPreview').classList.remove('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearScreenshot() {
+  currentScreenshot = null;
+  document.getElementById('snippetScreenshot').value = '';
+  document.getElementById('screenshotPreview').classList.add('hidden')
+}
 // ==========================================
 // FIRESTORE FUNCTIONS
 // ==========================================
