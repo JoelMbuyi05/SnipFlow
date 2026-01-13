@@ -51,6 +51,9 @@ function initFirebase() {
   }
 }
 
+// Initialize Analytics
+const analytics = firebase.analytics();
+
 // Try to initialize immediately
 initFirebase();
 
@@ -62,3 +65,9 @@ window.firebaseConfig = firebaseConfig;
 window.getAuth = () => auth;
 window.getDb = () => db;
 window.isFirebaseReady = () => firebaseInitialized;
+
+// Helper function to track events
+function trackEvent(eventName, params = {}) {
+  analytics.logEvent(eventName, params);
+  console.log('Tracked:', eventName, params);
+}

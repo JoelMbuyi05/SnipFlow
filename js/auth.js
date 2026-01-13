@@ -75,7 +75,10 @@ window.handleGoogleSignIn = async function() {
       }
     }
   }
+
+  trackEvent('sign_up', { method: 'email' });
 };
+
 
 // Handle redirect result (in case popup was blocked)
 window.addEventListener('load', async () => {
@@ -143,6 +146,8 @@ window.addEventListener('load', async () => {
       }
     });
   }
+
+  trackEvent('login', { method: 'email' });
 });
 
 // Logout with confirmation

@@ -464,6 +464,9 @@ async function handleSnippetSubmit(e) {
   
   renderSnippets();
   closeCreateModal();
+
+  // When user CREATES a snippet
+  trackEvent('snippet_created', { language: language });
 }
 
 async function deleteSnippet(snippetId) {
