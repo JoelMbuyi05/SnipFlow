@@ -723,14 +723,21 @@ function createSnippetCard(snippet) {
 
 function updateCounts() {
   const snippetCount = document.getElementById('snippetCount');
+  const snippetCountMobile = document.getElementById('snippetCountMobile');
   const allCount = document.getElementById('allCount');
+   const allCountMobile = document.getElementById('allCountMobile');
   
   if (snippetCount) {
     snippetCount.textContent = snippets.length;
   }
-  
+   if (snippetCountMobile) {
+    snippetCountMobile.textContent = snippets.length;
+  }
   if (allCount) {
     allCount.textContent = snippets.length;
+  }
+  if (allCountMobile) {
+    allCountMobile.textContent = snippets.length;
   }
 }
 
