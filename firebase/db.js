@@ -15,10 +15,12 @@ const firebaseConfig = {
 
 };
 
+
 // Initialize Firebase
 let appDb = null;
 let auth = null;
 let firebaseInitialized = false;
+let analytics = null;
 
 function initFirebase() {
   if (firebaseInitialized) return;
@@ -41,9 +43,14 @@ function initFirebase() {
     // Initialize services
     auth = firebase.auth();
     db = firebase.firestore();
+
+    //Initialize analytics
+    if (firebase.analytics) {
+      analytics = firebase.analytics();
+      console.log('Analytics initialized');
+    }
     
     firebaseInitialized = true;
-    
     console.log('Auth and Firestore ready');
     
   } catch (error) {
@@ -51,23 +58,23 @@ function initFirebase() {
   }
 }
 
-// Initialize Analytics
-const analytics = firebase.analytics();
-
 // Try to initialize immediately
 initFirebase();
 
 // Also try after DOM loads
 document.addEventListener('DOMContentLoaded', initFirebase);
 
+// Helper function to track events
+function trackEvent(eventName, params = {}) {
+  if(!analytics){
+    console.warn('Analytics not ready, skipping event:', eventName);
+    return;
+  }
+  analytics.logEvent(eventName, params);
+}
+
 // Export for global access
 window.firebaseConfig = firebaseConfig;
 window.getAuth = () => auth;
 window.getDb = () => db;
 window.isFirebaseReady = () => firebaseInitialized;
-
-// Helper function to track events
-function trackEvent(eventName, params = {}) {
-  analytics.logEvent(eventName, params);
-  console.log('Tracked:', eventName, params);
-}
