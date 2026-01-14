@@ -78,3 +78,4 @@ window.firebaseConfig = firebaseConfig;
 window.getAuth = () => auth;
 window.getDb = () => db;
 window.isFirebaseReady = () => firebaseInitialized;
+window.trackEvent = trackEvent;

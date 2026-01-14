@@ -52,6 +52,8 @@ window.handleGoogleSignIn = async function() {
     localStorage.setItem('snipflow_user', JSON.stringify(userData));
     console.log('User data saved to localStorage');
 
+    trackEvent('sign_up', { method: 'google' });
+
     // REDIRECT TO DASHBOARD
     console.log('Redirecting to dashboard...');
     window.location.href = '/dashboard';
@@ -99,6 +101,8 @@ window.addEventListener('load', async () => {
         };
         
         localStorage.setItem('snipflow_user', JSON.stringify(userData));
+        
+        trackEvent('login', { method: 'google' });
         
         // Show loading screen
         showLoadingScreen();
