@@ -420,11 +420,17 @@ async function handleSnippetSubmit(e) {
   const tagsInput = document.getElementById('snippetTags').value.trim();
   const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(t => t) : [];
   
-  if (!title || !language || !code) {
-    alert('Please fill in all required fields');
+  if (!title || !language) {
+    alert('Please fill in all fields');
     return;
   }
   
+  // Must have EITHER code OR screenshot
+  if (!code && !currentScreenshot) {
+    alert('Please provide either code or a screenshot');
+    return;
+  }
+
   if (editingSnippetId) {
     // Update existing snippet
     const snippet = snippets.find(s => s.id === editingSnippetId);
@@ -460,13 +466,15 @@ async function handleSnippetSubmit(e) {
     await saveSnippetToFirestore(newSnippet);
     showToast('Snippet created!');
     console.log('New snippet created:', title);
+
+    // Track snippet creation
+    if (window.trackEvent) {
+      window.trackEvent('snippet_created', { language: language });
+    }
   }
   
   renderSnippets();
   closeCreateModal();
-
-  // When user CREATES a snippet
-  trackEvent('snippet_created', { language: language });
 }
 
 async function deleteSnippet(snippetId) {
