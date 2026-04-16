@@ -55,7 +55,8 @@ Built with AI assistance for debugging, code review, and learning. AI helped tro
 
 # 🚀 Overall Growth
 
-* This project strengthened my ability to:
+This project strengthened my ability to:
+  
 * Think like a product-focused developer
 * Design user-friendly interfaces
 * Work with real-world authentication flows
